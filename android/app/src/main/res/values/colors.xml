@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="navy_primary">#0D2B55</color>
+    <color name="navy_dark">#071A35</color>
+    <color name="navy_container">#1A3D70</color>
+    <color name="gold_secondary">#C9A84C</color>
+    <color name="gold_dark">#A07030</color>
+    <color name="gold_container">#F5DFA0</color>
+    <color name="white">#FFFFFF</color>
+    <color name="surface">#F8F8FA</color>
+    <color name="error">#B3261E</color>
+    <color name="on_navy">#FFFFFF</color>
+    <color name="on_gold">#1C1B1F</color>
+</resources>

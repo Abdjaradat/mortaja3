@@ -1,0 +1,20 @@
+﻿# Backend
+backend/node_modules/
+backend/.env
+backend/dist/
+backend/prisma/migrations/dev.db
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/app/google-services.json
+android/app/src/main/res/font/
+android/keystore/
+*.jks
+
+# General
+.DS_Store
+*.log
+.idea/

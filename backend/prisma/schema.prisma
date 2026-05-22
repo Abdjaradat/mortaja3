@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                String             @id @default(cuid())
+  firebaseUid       String             @unique
+  email             String?            @unique
+  fullName          String?
+  governorate       String?
+  photoUrl          String?
+  userType          UserType
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  isActive          Boolean            @default(true)
+  isBlocked         Boolean            @default(false)
+  fcmToken          String?
+  tokenBalance      Int                @default(500)
+  totalTokensEarned Int                @default(500)
+  totalTokensSpent  Int                @default(0)
+  referralCode      String             @unique
+  referredBy        String?
+  conversations1    Conversation[]     @relation("user1")
+  conversations2    Conversation[]     @relation("user2")
+  listings          Listing[]
+  receivedMessages  Message[]          @relation("receiver")
+  sentMessages      Message[]          @relation("sender")
+  officerProfile    OfficerProfile?
+  reports           Report[]
+  savedListings     SavedListing[]
+  tokenTransactions TokenTransaction[]
+  adWatchLogs       AdWatchLog[]
+}
+
+model OfficerProfile {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  rank              String
+  status            OfficerStatus
+  documentUrl       String
+  verificationState VerificationState @default(PENDING)
+  verifiedAt        DateTime?
+  rejectionReason   String?
+  exemptionUsed     Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  user              User              @relation(fields: [userId], references: [id])
+}
+
+model Listing {
+  id            String         @id @default(cuid())
+  officerId     String
+  vehicleType   String
+  makeModel     String
+  yearMin       Int?
+  yearMax       Int?
+  color         String?
+  mileageKm     Int?
+  fuelType      String?
+  transmission  String?
+  phoneNumber   String?
+  marketPrice   Int?
+  expectedPrice Int?
+  listingType   ListingType
+  governorate   String
+  notes         String?
+  photos        String[]
+  tier          ListingTier    @default(FREE)
+  tierExpiresAt DateTime?
+  status        ListingStatus  @default(ACTIVE)
+  viewCount     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  expiresAt     DateTime?
+  officer       User           @relation(fields: [officerId], references: [id])
+  savedBy       SavedListing[]
+}
+
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, listingId])
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  listingId String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user1     User      @relation("user1", fields: [user1Id], references: [id])
+  user2     User      @relation("user2", fields: [user2Id], references: [id])
+  messages  Message[]
+
+  @@unique([user1Id, user2Id, listingId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  receiverId     String
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  receiver       User         @relation("receiver", fields: [receiverId], references: [id])
+  sender         User         @relation("sender", fields: [senderId], references: [id])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  targetType  String
+  targetId    String
+  reason      String
+  description String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  reporter    User     @relation(fields: [reporterId], references: [id])
+}
+
+model TokenTransaction {
+  id              String    @id @default(cuid())
+  userId          String
+  type            TxType
+  amount          Int
+  reason          TxReason
+  balanceAfter    Int
+  relatedEntityId String?
+  createdAt       DateTime  @default(now())
+  user            User      @relation(fields: [userId], references: [id])
+}
+
+model AdWatchLog {
+  id           String   @id @default(cuid())
+  userId       String
+  tokensEarned Int      @default(10)
+  watchedAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+enum UserType {
+  OFFICER
+  BUYER
+  ADMIN
+}
+
+enum TxType {
+  EARN
+  SPEND
+}
+
+enum TxReason {
+  WELCOME
+  AD_WATCH
+  REFERRAL
+  POST_LISTING
+  POST_EXEMPTION
+  REVEAL_CONTACT
+  START_CONVERSATION
+  BOOST_LISTING
+  RENEW_LISTING
+  PURCHASE
+}
+
+enum OfficerStatus {
+  ACTIVE
+  RETIRED
+}
+
+enum VerificationState {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ListingType {
+  SEEKING
+  OWNED
+}
+
+enum ListingTier {
+  FREE
+  FEATURED
+  VIP
+  GOLD
+}
+
+enum ListingStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  REMOVED
+}

@@ -1,0 +1,45 @@
+package com.raed.app
+
+import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
+import com.google.android.gms.ads.MobileAds
+import dagger.hilt.android.HiltAndroidApp
+
+@HiltAndroidApp
+class RaedApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        MobileAds.initialize(this)
+        createNotificationChannels()
+    }
+
+    private fun createNotificationChannels() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val manager = getSystemService(NotificationManager::class.java)
+
+            manager.createNotificationChannel(
+                NotificationChannel(
+                    CHANNEL_MESSAGES,
+                    "الرسائل",
+                    NotificationManager.IMPORTANCE_HIGH,
+                ).apply { description = "إشعارات الرسائل الجديدة" }
+            )
+
+            manager.createNotificationChannel(
+                NotificationChannel(
+                    CHANNEL_VERIFICATION,
+                    "التوثيق",
+                    NotificationManager.IMPORTANCE_HIGH,
+                ).apply { description = "تحديثات حالة التوثيق" }
+            )
+        }
+    }
+
+    companion object {
+        const val CHANNEL_MESSAGES = "messages"
+        const val CHANNEL_VERIFICATION = "verification"
+    }
+}
