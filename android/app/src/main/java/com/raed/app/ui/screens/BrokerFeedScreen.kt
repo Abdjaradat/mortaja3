@@ -1,9 +1,14 @@
 package com.raed.app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +31,7 @@ fun BrokerFeedContent(
 ) {
     val requests = MockRequestsSource.getAll()
     var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var infoExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -34,64 +40,108 @@ fun BrokerFeedContent(
         }
     }
 
-    if (requests.isEmpty()) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center,
+    Column(modifier = modifier) {
+        // ── Collapsible info card ────────────────────────────────────────
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text("🔨", fontSize = 48.sp)
-                Text(
-                    "لا توجد طلبات حالياً",
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    "سيظهر هنا طلبات المشترين بمجرد نشرها",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
-    } else {
-        LazyColumn(
-            modifier = modifier,
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            item(key = "feed_header") {
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { infoExpanded = !infoExpanded }
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment     = Alignment.CenterVertically,
                 ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("🔨", fontSize = 20.sp)
-                        Text(
-                            "قدّم أعلى عرض بالتوكنز لتحصل على بيانات المشتري",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
+                    Text(
+                        "كيف يعمل المزاد؟ 💡",
+                        style      = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                    Icon(
+                        imageVector        = if (infoExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                        contentDescription = null,
+                        tint               = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+                AnimatedVisibility(visible = infoExpanded) {
+                    Text(
+                        text  = "١. المشتري ينشر طلبه — نوع السيارة وميزانيته\n" +
+                                "٢. أنت تقدّم عرضك بعدد التوكنز — كلما زاد عرضك زادت أولويتك\n" +
+                                "٣. بعد 24 ساعة، يختار المشتري الوسيط المناسب\n" +
+                                "٤. الفائز يحصل على رقم المشتري — الخاسرون يستردون توكنزهم\n\n" +
+                                "⚠️ ملاحظة: التوكنز تُخصم عند تقديم العرض وتُعاد إذا لم تفز",
+                        style    = MaterialTheme.typography.bodySmall,
+                        color    = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                    )
                 }
             }
-            items(requests, key = { it.id }) { request ->
-                RequestCard(
-                    request = request,
-                    tick = tick,
-                    onBidClick = { onRequestClick(request.id) },
-                )
+        }
+
+        // ── Feed ─────────────────────────────────────────────────────────
+        if (requests.isEmpty()) {
+            Box(
+                modifier         = Modifier.weight(1f).padding(32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text("🔨", fontSize = 48.sp)
+                    Text(
+                        "لا توجد طلبات حالياً",
+                        style     = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        "سيظهر هنا طلبات المشترين بمجرد نشرها",
+                        style     = MaterialTheme.typography.bodyMedium,
+                        color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier        = Modifier.weight(1f),
+                contentPadding  = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                item(key = "feed_header") {
+                    Surface(
+                        color    = MaterialTheme.colorScheme.secondaryContainer,
+                        shape    = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier              = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment     = Alignment.CenterVertically,
+                        ) {
+                            Text("🔨", fontSize = 20.sp)
+                            Text(
+                                "قدّم أعلى عرض بالتوكنز لتحصل على بيانات المشتري",
+                                style    = MaterialTheme.typography.bodySmall,
+                                color    = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                }
+                items(requests, key = { it.id }) { request ->
+                    RequestCard(
+                        request    = request,
+                        tick       = tick,
+                        onBidClick = { onRequestClick(request.id) },
+                    )
+                }
             }
         }
     }

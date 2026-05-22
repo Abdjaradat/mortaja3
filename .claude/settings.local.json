@@ -81,7 +81,14 @@
       "PowerShell(cd \"C:\\\\Users\\\\Abdul\\\\Mortaja3\\\\backend\" ; $env:PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION = \"Yes, proceed.\" ; npx prisma migrate reset --force 2>&1)",
       "PowerShell(gh auth *)",
       "PowerShell(Test-Path *)",
-      "Bash(Get-ChildItem *)"
+      "Bash(Get-ChildItem *)",
+      "PowerShell(curl.exe -s \"http://localhost:3000/api/v1/listings\" | ConvertFrom-Json | ConvertTo-Json -Depth 5)",
+      "PowerShell(curl.exe -s \"http://localhost:3000/api/v1/listings?type=OWNED\" | ConvertFrom-Json | ConvertTo-Json -Depth 3)",
+      "PowerShell(curl.exe -s \"http://localhost:3000/api/v1/listings?governorate=عمان&sort=price_asc\" | ConvertFrom-Json | ConvertTo-Json -Depth 3)",
+      "PowerShell(curl.exe -s -w \"`nHTTP_STATUS:%{http_code}\" \"http://localhost:3000/api/v1/listings?governorate=%D8%B9%D9%85%D8%A7%D9%86&sort=price_asc\")",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -list-avds)",
+      "PowerShell(Start-Process -FilePath \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -ArgumentList \"-avd Pixel_6_API_33 -no-snapshot-load\" -WindowStyle Normal)",
+      "PowerShell(curl.exe -s \"http://localhost:3000/api/v1/requests\" -H \"Authorization: Bearer invalid\" | ConvertFrom-Json | ConvertTo-Json)"
     ]
   }
 }

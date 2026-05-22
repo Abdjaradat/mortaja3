@@ -11,6 +11,7 @@ import listingRoutes from "./routes/listing.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import reportRoutes from "./routes/report.routes.js";
+import requestRoutes from "./routes/request.routes.js";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/v1/listings", listingRoutes);
 app.use("/api/v1/conversations", chatRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/reports", reportRoutes);
+app.use("/api/v1/requests", requestRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", version: "1.0.0" });

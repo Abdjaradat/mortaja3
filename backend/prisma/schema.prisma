@@ -34,6 +34,8 @@ model User {
   savedListings     SavedListing[]
   tokenTransactions TokenTransaction[]
   adWatchLogs       AdWatchLog[]
+  buyerRequests     BuyerRequest[]
+  bids              Bid[]
 }
 
 model OfficerProfile {
@@ -202,4 +204,38 @@ enum ListingStatus {
   COMPLETED
   EXPIRED
   REMOVED
+}
+
+model BuyerRequest {
+  id          String        @id @default(cuid())
+  buyerId     String
+  buyer       User          @relation(fields: [buyerId], references: [id])
+  vehicleType String
+  budgetMin   Int
+  budgetMax   Int
+  governorate String
+  notes       String?
+  status      RequestStatus @default(OPEN)
+  expiresAt   DateTime
+  createdAt   DateTime      @default(now())
+  bids        Bid[]
+}
+
+model Bid {
+  id        String       @id @default(cuid())
+  requestId String
+  request   BuyerRequest @relation(fields: [requestId], references: [id])
+  brokerId  String
+  broker    User         @relation(fields: [brokerId], references: [id])
+  tokens    Int
+  placedAt  DateTime     @default(now())
+  isWinner  Boolean      @default(false)
+
+  @@unique([requestId, brokerId])
+}
+
+enum RequestStatus {
+  OPEN
+  CLOSED
+  EXPIRED
 }

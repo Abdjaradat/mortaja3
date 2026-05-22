@@ -1,11 +1,15 @@
 package com.raed.app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.HelpOutline
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -93,6 +97,48 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Spacer(Modifier.height(4.dp))
+
+            // ── Collapsible info card ────────────────────────────────────
+            var infoExpanded by remember { mutableStateOf(false) }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors   = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { infoExpanded = !infoExpanded }
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment     = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "كيف تعمل الحاسبة؟ 💡",
+                            style      = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color      = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        Icon(
+                            imageVector        = if (infoExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint               = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    AnimatedVisibility(visible = infoExpanded) {
+                        Text(
+                            text  = "أدخل سعر السيارة في السوق واختر نوع الوقود، وستحسب الحاسبة تلقائياً:\n" +
+                                    "- قيمة الضريبة التي وفّرها الإعفاء\n" +
+                                    "- ربحك الصافي بعد خصم ما دفعته للضابط\n" +
+                                    "- الحد الأدنى لسعر السيارة الذي يجعل الصفقة مربحة\n\n" +
+                                    "💡 نصيحة: ابحث عن سيارة يكون سعرها في السوق أعلى من 'أدنى سعر للربح'",
+                            style    = MaterialTheme.typography.bodySmall,
+                            color    = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                        )
+                    }
+                }
+            }
 
             // ── Input: market price ──────────────────────────────────────
             OutlinedTextField(
