@@ -60,8 +60,18 @@ class AddCarViewModel @Inject constructor(
     var year by mutableIntStateOf(2023)
     var mileage by mutableStateOf("")
     var color by mutableStateOf("")
+    var vehicleType by mutableStateOf("SEDAN")
     var fuelType by mutableStateOf(FuelType.GASOLINE)
     var transmission by mutableStateOf(Transmission.AUTOMATIC)
+
+    fun setVehicleType(vt: String) {
+        vehicleType = vt
+        when (vt) {
+            "HYBRID" -> fuelType = FuelType.HYBRID
+            "EV"     -> fuelType = FuelType.ELECTRIC
+            else     -> {}
+        }
+    }
 
     // Step 2
     var price by mutableStateOf("")
@@ -108,29 +118,17 @@ class AddCarViewModel @Inject constructor(
             isPublishing = true
             errorMessage = null
             try {
+                // Upfront balance check for UX (server enforces atomically)
                 val balResp = api.getTokenBalance()
-                if (!balResp.isSuccessful) {
-                    errorMessage = "فشل التحقق من الرصيد"
-                    isPublishing = false
-                    return@launch
+                if (balResp.isSuccessful) {
+                    val bal = balResp.body()!!.tokenBalance
+                    tokenBalance = bal
+                    if (bal < 50) { showTokenGate = true; return@launch }
                 }
-                val bal = balResp.body()!!.tokenBalance
-                tokenBalance = bal
-                if (bal < 50) {
-                    showTokenGate = true
-                    isPublishing = false
-                    return@launch
-                }
-                val spendResp = api.spendTokens(SpendTokenRequest(reason = "POST_LISTING"))
-                if (!spendResp.isSuccessful) {
-                    errorMessage = "فشل خصم التوكنز"
-                    isPublishing = false
-                    return@launch
-                }
-                tokenBalance = spendResp.body()!!.balanceAfter
+
                 val listingResp = api.createListing(
                     CreateListingRequest(
-                        vehicleType = "SEDAN",
+                        vehicleType = vehicleType,
                         makeModel = "${make.trim()} ${model.trim()}",
                         yearMin = year,
                         yearMax = year,
@@ -145,12 +143,11 @@ class AddCarViewModel @Inject constructor(
                         notes = description.trim().takeIf { it.isNotBlank() },
                     )
                 )
-                if (!listingResp.isSuccessful) {
-                    errorMessage = "فشل نشر الإعلان على السيرفر"
-                    isPublishing = false
-                    return@launch
+                when {
+                    listingResp.code() == 402 -> { refreshBalance(); showTokenGate = true }
+                    listingResp.isSuccessful  -> publishSuccess = true
+                    else                      -> errorMessage = "فشل نشر الإعلان على السيرفر"
                 }
-                publishSuccess = true
             } catch (e: Exception) {
                 errorMessage = e.localizedMessage ?: "خطأ غير متوقع"
             } finally {
@@ -374,6 +371,22 @@ private fun Step1Content(vm: AddCarViewModel, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
+
+        // Vehicle body type
+        val bodyTypes = listOf("سيدان" to "SEDAN", "SUV" to "SUV", "بيكأب" to "OTHER", "هايبرد" to "HYBRID", "كهربائي" to "EV")
+        Text("نوع السيارة", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            bodyTypes.forEach { (label, apiValue) ->
+                FilterChip(
+                    selected = vm.vehicleType == apiValue,
+                    onClick = { vm.setVehicleType(apiValue) },
+                    label = { Text(label, style = MaterialTheme.typography.bodySmall) },
+                )
+            }
+        }
 
         // Fuel type
         Text("نوع الوقود", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -608,6 +621,7 @@ private fun Step3Content(vm: AddCarViewModel, modifier: Modifier = Modifier) {
             ) {
                 Text("ملخص الإعلان", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 HorizontalDivider()
+                SummaryRow("النوع", listOf("سيدان" to "SEDAN", "SUV" to "SUV", "بيكأب" to "OTHER", "هايبرد" to "HYBRID", "كهربائي" to "EV").firstOrNull { it.second == vm.vehicleType }?.first ?: vm.vehicleType)
                 SummaryRow("السيارة", "${vm.make} ${vm.model} ${vm.year}")
                 SummaryRow("الكيلومترات", "${vm.mileage} كم")
                 SummaryRow("اللون", vm.color)

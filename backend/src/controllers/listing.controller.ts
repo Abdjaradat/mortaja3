@@ -3,7 +3,7 @@ import { z } from "zod";
 import prisma from "../utils/prisma.js";
 import { applyTokens } from "../utils/tokens.js";
 import type { AuthenticatedRequest } from "../middleware/auth.js";
-import { ListingType, ListingStatus, TxReason } from "@prisma/client";
+import { ListingType, ListingStatus, TxReason, Prisma } from "@prisma/client";
 
 const createListingSchema = z.object({
   vehicleType: z.enum(["SEDAN", "SUV", "HYBRID", "EV", "OTHER"]),
@@ -29,6 +29,7 @@ export async function getListings(req: Request, res: Response): Promise<void> {
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
 
+  // Prisma where for the count query
   const where = {
     status: ListingStatus.ACTIVE,
     ...(governorate ? { governorate } : {}),
@@ -43,50 +44,78 @@ export async function getListings(req: Request, res: Response): Promise<void> {
       : {}),
   };
 
-  const orderBy =
-    sort === "price_asc"
-      ? { expectedPrice: "asc" as const }
-      : sort === "price_desc"
-      ? { expectedPrice: "desc" as const }
-      : { createdAt: "desc" as const };
+  // Dynamic WHERE for raw query
+  const conditions: Prisma.Sql[] = [Prisma.sql`l.status = 'ACTIVE'::"ListingStatus"`];
+  if (governorate) conditions.push(Prisma.sql`l.governorate = ${governorate}`);
+  if (type)        conditions.push(Prisma.sql`l."listingType" = ${type}::"ListingType"`);
+  if (minPrice)    conditions.push(Prisma.sql`l."expectedPrice" >= ${parseInt(minPrice)}`);
+  if (maxPrice)    conditions.push(Prisma.sql`l."expectedPrice" <= ${parseInt(maxPrice)}`);
+  const whereClause = Prisma.join(conditions, " AND ");
 
-  const [listings, total] = await Promise.all([
-    prisma.listing.findMany({
-      where,
-      orderBy,
-      skip: (pageNum - 1) * limitNum,
-      take: limitNum,
-      select: {
-        id: true,
-        vehicleType: true,
-        makeModel: true,
-        yearMin: true,
-        yearMax: true,
-        color: true,
-        mileageKm: true,
-        fuelType: true,
-        transmission: true,
-        marketPrice: true,
-        expectedPrice: true,
-        listingType: true,
-        tier: true,
-        tierExpiresAt: true,
-        governorate: true,
-        photos: true,
-        notes: true,
-        createdAt: true,
-        officer: {
-          select: {
-            id: true,
-            fullName: true,
-            officerProfile: { select: { verificationState: true, rank: true } },
-          },
-        },
-      },
-    }),
-    prisma.listing.count({ where }),
-  ]);
+  const secondaryOrder =
+    sort === "price_asc"  ? Prisma.sql`l."expectedPrice" ASC NULLS LAST` :
+    sort === "price_desc" ? Prisma.sql`l."expectedPrice" DESC NULLS LAST` :
+                            Prisma.sql`l."createdAt" DESC`;
 
+  // Raw query: CASE WHEN tier priority respecting tierExpiresAt, then secondary sort
+  const rows = await prisma.$queryRaw<Array<Record<string, unknown>>>`
+    SELECT
+      l.id,
+      l."vehicleType",
+      l."makeModel",
+      l."yearMin",
+      l."yearMax",
+      l.color,
+      l."mileageKm",
+      l."fuelType",
+      l.transmission,
+      l."marketPrice",
+      l."expectedPrice",
+      l."listingType",
+      l.tier::text          AS tier,
+      l."tierExpiresAt",
+      l.governorate,
+      l.photos,
+      l.notes,
+      l."createdAt",
+      CASE
+        WHEN l.tier != 'FREE'::"ListingTier"
+          AND (l."tierExpiresAt" IS NULL OR l."tierExpiresAt" > NOW())
+        THEN CASE l.tier::text
+          WHEN 'GOLD'     THEN 1
+          WHEN 'VIP'      THEN 2
+          WHEN 'FEATURED' THEN 3
+          ELSE 4
+        END
+        ELSE 4
+      END AS "_tierPri",
+      CASE WHEN u.id IS NOT NULL
+        THEN json_build_object(
+          'id',          u.id,
+          'fullName',    u."fullName",
+          'officerProfile', CASE WHEN op.id IS NOT NULL
+            THEN json_build_object(
+              'verificationState', op."verificationState",
+              'rank',              op.rank
+            )
+            ELSE NULL
+          END
+        )
+        ELSE NULL
+      END AS officer
+    FROM "Listing" l
+    LEFT JOIN "User"           u  ON l."officerId" = u.id
+    LEFT JOIN "OfficerProfile" op ON op."userId"   = u.id
+    WHERE ${whereClause}
+    ORDER BY "_tierPri" ASC, ${secondaryOrder}
+    LIMIT  ${limitNum}
+    OFFSET ${(pageNum - 1) * limitNum}
+  `;
+
+  // Strip internal sort helper before sending to client
+  const listings = rows.map(({ _tierPri, ...rest }) => rest);
+
+  const total = await prisma.listing.count({ where });
   res.json({ listings, total, page: pageNum, limit: limitNum });
 }
 
@@ -143,6 +172,22 @@ export async function createListing(req: AuthenticatedRequest, res: Response): P
   const listing = await prisma.listing.create({
     data: { ...parsed.data, officerId: req.user!.userId },
   });
+
+  const txReason = parsed.data.listingType === ListingType.OWNED
+    ? TxReason.POST_LISTING
+    : TxReason.POST_EXEMPTION;
+
+  try {
+    await applyTokens(req.user!.userId, txReason, listing.id);
+  } catch (err: unknown) {
+    await prisma.listing.delete({ where: { id: listing.id } });
+    if (err instanceof Error && err.message.startsWith("INSUFFICIENT_TOKENS")) {
+      const current = err.message.split(":")[1];
+      res.status(402).json({ error: "insufficient_tokens", balance: Number(current) });
+      return;
+    }
+    throw err;
+  }
 
   res.status(201).json(listing);
 }

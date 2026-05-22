@@ -369,7 +369,7 @@ private fun TransactionRow(tx: TokenTransactionDto) {
         "BOOST_LISTING" -> "تعزيز الإعلان"
         "RENEW_LISTING" -> "تجديد الإعلان"
         "PURCHASE" -> "شراء توكنز"
-        else -> tx.reason
+        else -> "معاملة"
     }
 
     Row(

@@ -78,7 +78,10 @@
       "Bash(adb -s emulator-5554 pull /sdcard/screen_current.png \"C:\\\\Users\\\\Abdul\\\\AppData\\\\Local\\\\Temp\\\\screen_current.png\")",
       "Bash(adb -s emulator-5554 pull /sdcard/screen_current.png C:/Users/Abdul/AppData/Local/Temp/screen_current.png)",
       "Bash(adb *)",
-      "PowerShell(cd \"C:\\\\Users\\\\Abdul\\\\Mortaja3\\\\backend\" ; $env:PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION = \"Yes, proceed.\" ; npx prisma migrate reset --force 2>&1)"
+      "PowerShell(cd \"C:\\\\Users\\\\Abdul\\\\Mortaja3\\\\backend\" ; $env:PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION = \"Yes, proceed.\" ; npx prisma migrate reset --force 2>&1)",
+      "PowerShell(gh auth *)",
+      "PowerShell(Test-Path *)",
+      "Bash(Get-ChildItem *)"
     ]
   }
 }
