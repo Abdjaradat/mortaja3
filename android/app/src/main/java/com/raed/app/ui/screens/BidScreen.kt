@@ -22,9 +22,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.raed.app.data.mock.*
+import com.raed.app.data.api.RaedApi
+import com.raed.app.data.api.models.BidBody
+import com.raed.app.data.api.models.RequestDto
+import com.raed.app.data.local.SessionDataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.compose.runtime.getValue
@@ -32,23 +36,56 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 
 private val Gold = Color(0xFFC9A961)
+private fun Int.toJod() = "%,d د.أ".format(this)
 
 @HiltViewModel
 class BidViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
+    private val api: RaedApi,
+    private val sessionDataStore: SessionDataStore,
 ) : ViewModel() {
 
     val requestId: String = checkNotNull(savedStateHandle["requestId"])
     var bidInput by mutableStateOf("")
     var isSubmitting by mutableStateOf(false)
-    var tokenBalance by mutableIntStateOf(500)
-    var bidSubmitted by mutableStateOf(false)
+    var isLoading by mutableStateOf(true)
+    var request by mutableStateOf<RequestDto?>(null)
+    var tokenBalance by mutableIntStateOf(0)
+    var currentUserId by mutableStateOf<String?>(null)
+    var error by mutableStateOf<String?>(null)
+    var submitMessage by mutableStateOf<String?>(null)
 
-    fun getRequest(): BuyerRequest? = MockRequestsSource.getById(requestId)
+    init {
+        loadAll()
+    }
 
-    fun minBid(): Int = (getRequest()?.highestBid ?: 0) + 1
+    fun loadAll() {
+        viewModelScope.launch {
+            isLoading = true
+            error = null
+            try {
+                if (currentUserId == null) {
+                    currentUserId = sessionDataStore.userId.firstOrNull()
+                }
+                val reqDef = async { api.getRequest(requestId) }
+                val balDef = async { api.getTokenBalance() }
+                val reqResp = reqDef.await()
+                val balResp = balDef.await()
+                if (reqResp.isSuccessful) request = reqResp.body()
+                if (balResp.isSuccessful) tokenBalance = balResp.body()?.tokenBalance ?: 0
+                if (!reqResp.isSuccessful) error = "تعذّر تحميل الطلب"
+            } catch (e: Exception) {
+                error = "تعذّر الاتصال بالخادم"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun minBid(): Int = (request?.highestBid ?: 0) + 1
 
     fun isInputValid(): Boolean {
         val v = bidInput.toIntOrNull() ?: return false
@@ -59,10 +96,29 @@ class BidViewModel @Inject constructor(
         val tokens = bidInput.toIntOrNull() ?: return
         viewModelScope.launch {
             isSubmitting = true
-            MockRequestsSource.placeBid(requestId, tokens)
-            bidInput = ""
-            bidSubmitted = true
-            isSubmitting = false
+            error = null
+            try {
+                val resp = api.placeBid(requestId, BidBody(tokens))
+                when {
+                    resp.isSuccessful -> {
+                        bidInput = ""
+                        submitMessage = "تم تقديم عرضك بنجاح ✅"
+                        // Refresh request and balance
+                        val reqDef = async { api.getRequest(requestId) }
+                        val balDef = async { api.getTokenBalance() }
+                        val reqResp = reqDef.await()
+                        val balResp = balDef.await()
+                        if (reqResp.isSuccessful) request = reqResp.body()
+                        if (balResp.isSuccessful) tokenBalance = balResp.body()?.tokenBalance ?: 0
+                    }
+                    resp.code() == 402 -> error = "رصيد توكنز غير كافٍ"
+                    else -> error = "حدث خطأ أثناء تقديم العرض"
+                }
+            } catch (e: Exception) {
+                error = "تعذّر الاتصال بالخادم"
+            } finally {
+                isSubmitting = false
+            }
         }
     }
 }
@@ -83,6 +139,18 @@ fun BidScreen(
         }
     }
 
+    LaunchedEffect(viewModel.error) {
+        val msg = viewModel.error ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(msg)
+        viewModel.error = null
+    }
+
+    LaunchedEffect(viewModel.submitMessage) {
+        val msg = viewModel.submitMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(msg)
+        viewModel.submitMessage = null
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -96,25 +164,46 @@ fun BidScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        val request = viewModel.getRequest()
 
-        if (request == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("الطلب غير موجود")
+        when {
+            viewModel.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+                return@Scaffold
             }
-            return@Scaffold
+
+            viewModel.request == null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text("الطلب غير موجود")
+                        OutlinedButton(onClick = { viewModel.loadAll() }) {
+                            Text("إعادة المحاولة")
+                        }
+                    }
+                }
+                return@Scaffold
+            }
         }
 
-        val remaining = (request.endsAt - tick).coerceAtLeast(0L)
+        val request = viewModel.request!!
+        val currentUserId = viewModel.currentUserId ?: ""
+        val remaining = (request.expiresAtMillis - tick).coerceAtLeast(0L)
         val isExpired = remaining == 0L
         val hours = remaining / 3_600_000L
         val minutes = (remaining % 3_600_000L) / 60_000L
         val seconds = (remaining % 60_000L) / 1_000L
+        val myBid = if (currentUserId.isNotEmpty()) request.myBid(currentUserId) else null
+        val amIWinning = currentUserId.isNotEmpty() && request.amIWinning(currentUserId)
 
         Column(
             modifier = Modifier
@@ -142,11 +231,12 @@ fun BidScreen(
                         fontWeight = FontWeight.Bold,
                     )
                     HorizontalDivider()
-                    SummaryDetailRow("النوع", request.vehicleType.label)
+                    SummaryDetailRow("النوع", request.vehicleTypeLabel)
                     SummaryDetailRow("الميزانية", "${request.budgetMin.toJod()} — ${request.budgetMax.toJod()}")
                     SummaryDetailRow("المحافظة", request.governorate)
-                    if (request.notes.isNotBlank()) {
-                        SummaryDetailRow("ملاحظات", request.notes)
+                    val notes = request.notes
+                    if (!notes.isNullOrBlank()) {
+                        SummaryDetailRow("ملاحظات", notes)
                     }
                 }
             }
@@ -221,36 +311,32 @@ fun BidScreen(
                 }
             }
 
-            // My bid status (shown after submitting)
-            if (viewModel.bidSubmitted) {
-                val myBid = request.myBid
-                if (myBid != null) {
-                    val winning = request.amIWinning
-                    Surface(
-                        color = if (winning) Color(0xFF1B5E20).copy(alpha = 0.12f)
-                        else Color(0xFFE65100).copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth(),
+            // My bid status
+            if (myBid != null) {
+                Surface(
+                    color = if (amIWinning) Color(0xFF1B5E20).copy(alpha = 0.12f)
+                    else Color(0xFFE65100).copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(if (winning) "🏆" else "⚡", fontSize = 28.sp)
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text(
-                                    if (winning) "أنت الأعلى عرضاً حالياً" else "هناك عرض أعلى منك",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (winning) Color(0xFF1B5E20) else Color(0xFFE65100),
-                                )
-                                Text(
-                                    "عرضك: ${myBid.tokens} 🪙",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
+                        Text(if (amIWinning) "🏆" else "⚡", fontSize = 28.sp)
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                if (amIWinning) "أنت الأعلى عرضاً حالياً" else "هناك عرض أعلى منك",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (amIWinning) Color(0xFF1B5E20) else Color(0xFFE65100),
+                            )
+                            Text(
+                                "عرضك: ${myBid.tokens} 🪙",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                     }
                 }
@@ -272,7 +358,7 @@ fun BidScreen(
                     ) {
                         Text("ℹ️", fontSize = 14.sp)
                         Text(
-                            "سيتم خصم التوكنز فقط إذا فزت بالمزاد. رصيدك الحالي: ${viewModel.tokenBalance} 🪙",
+                            "التوكنز تُخصم فور تقديم العرض وتُعاد إذا لم تفز. رصيدك: ${viewModel.tokenBalance} 🪙",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                         )
@@ -315,7 +401,7 @@ fun BidScreen(
                             color = MaterialTheme.colorScheme.onPrimary,
                         )
                     } else {
-                        val label = if (request.myBid != null) "رفع العرض" else "قدّم العرض"
+                        val label = if (myBid != null) "رفع العرض" else "قدّم العرض"
                         Text(
                             "$label — ${viewModel.bidInput.ifBlank { "?" }} 🪙",
                             fontWeight = FontWeight.Bold,

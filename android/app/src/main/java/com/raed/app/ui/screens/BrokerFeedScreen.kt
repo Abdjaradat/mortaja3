@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,17 +20,72 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.raed.app.data.mock.*
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.raed.app.data.api.RaedApi
+import com.raed.app.data.api.models.BidDto
+import com.raed.app.data.api.models.RequestDto
+import com.raed.app.data.local.SessionDataStore
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 
 private val Gold = Color(0xFFC9A961)
+private fun Int.toJod() = "%,d د.أ".format(this)
 
+@HiltViewModel
+class BrokerFeedViewModel @Inject constructor(
+    private val api: RaedApi,
+    private val sessionDataStore: SessionDataStore,
+) : ViewModel() {
+    var requests by mutableStateOf<List<RequestDto>>(emptyList())
+    var isLoading by mutableStateOf(false)
+    var isRefreshing by mutableStateOf(false)
+    var error by mutableStateOf<String?>(null)
+    var currentUserId by mutableStateOf<String?>(null)
+
+    init {
+        refresh()
+    }
+
+    fun refresh(isManual: Boolean = false) {
+        viewModelScope.launch {
+            if (isManual) isRefreshing = true else if (requests.isEmpty()) isLoading = true
+            error = null
+            try {
+                if (currentUserId == null) {
+                    currentUserId = sessionDataStore.userId.firstOrNull()
+                }
+                val response = api.getRequests(mine = false)
+                if (response.isSuccessful) {
+                    requests = response.body() ?: emptyList()
+                } else {
+                    error = "خطأ في تحميل الطلبات"
+                }
+            } catch (e: Exception) {
+                error = "تعذّر الاتصال بالخادم"
+            } finally {
+                isLoading = false
+                isRefreshing = false
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrokerFeedContent(
     onRequestClick: (id: String) -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: BrokerFeedViewModel = hiltViewModel(),
 ) {
-    val requests = MockRequestsSource.getAll()
     var tick by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var infoExpanded by remember { mutableStateOf(false) }
 
@@ -40,107 +96,149 @@ fun BrokerFeedContent(
         }
     }
 
-    Column(modifier = modifier) {
-        // ── Collapsible info card ────────────────────────────────────────
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        ) {
-            Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { infoExpanded = !infoExpanded }
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment     = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "كيف يعمل المزاد؟ 💡",
-                        style      = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                    Icon(
-                        imageVector        = if (infoExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint               = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                }
-                AnimatedVisibility(visible = infoExpanded) {
-                    Text(
-                        text  = "١. المشتري ينشر طلبه — نوع السيارة وميزانيته\n" +
-                                "٢. أنت تقدّم عرضك بعدد التوكنز — كلما زاد عرضك زادت أولويتك\n" +
-                                "٣. بعد 24 ساعة، يختار المشتري الوسيط المناسب\n" +
-                                "٤. الفائز يحصل على رقم المشتري — الخاسرون يستردون توكنزهم\n\n" +
-                                "⚠️ ملاحظة: التوكنز تُخصم عند تقديم العرض وتُعاد إذا لم تفز",
-                        style    = MaterialTheme.typography.bodySmall,
-                        color    = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
-                    )
-                }
-            }
-        }
-
-        // ── Feed ─────────────────────────────────────────────────────────
-        if (requests.isEmpty()) {
-            Box(
-                modifier         = Modifier.weight(1f).padding(32.dp),
-                contentAlignment = Alignment.Center,
+    PullToRefreshBox(
+        isRefreshing = viewModel.isRefreshing,
+        onRefresh = { viewModel.refresh(isManual = true) },
+        modifier = modifier,
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Collapsible info card ───────────────────────────────────
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text("🔨", fontSize = 48.sp)
-                    Text(
-                        "لا توجد طلبات حالياً",
-                        style     = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        "سيظهر هنا طلبات المشترين بمجرد نشرها",
-                        style     = MaterialTheme.typography.bodyMedium,
-                        color     = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier        = Modifier.weight(1f),
-                contentPadding  = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item(key = "feed_header") {
-                    Surface(
-                        color    = MaterialTheme.colorScheme.secondaryContainer,
-                        shape    = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth(),
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { infoExpanded = !infoExpanded }
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            modifier              = Modifier.padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment     = Alignment.CenterVertically,
+                        Text(
+                            "كيف يعمل المزاد؟ 💡",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                        Icon(
+                            imageVector = if (infoExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                    AnimatedVisibility(visible = infoExpanded) {
+                        Text(
+                            text = "١. المشتري ينشر طلبه — نوع السيارة وميزانيته\n" +
+                                    "٢. أنت تقدّم عرضك بعدد التوكنز — كلما زاد عرضك زادت أولويتك\n" +
+                                    "٣. بعد 24 ساعة، يختار المشتري الوسيط المناسب\n" +
+                                    "٤. الفائز يحصل على رقم المشتري — الخاسرون يستردون توكنزهم\n\n" +
+                                    "⚠️ ملاحظة: التوكنز تُخصم عند تقديم العرض وتُعاد إذا لم تفز",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                        )
+                    }
+                }
+            }
+
+            // ── Content states ──────────────────────────────────────────
+            when {
+                viewModel.isLoading -> {
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                viewModel.error != null -> {
+                    Box(
+                        modifier = Modifier.weight(1f).padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text("🔨", fontSize = 20.sp)
+                            Text("⚠️", fontSize = 40.sp)
                             Text(
-                                "قدّم أعلى عرض بالتوكنز لتحصل على بيانات المشتري",
-                                style    = MaterialTheme.typography.bodySmall,
-                                color    = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.weight(1f),
+                                viewModel.error ?: "",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                            )
+                            OutlinedButton(onClick = { viewModel.refresh() }) {
+                                Text("إعادة المحاولة")
+                            }
+                        }
+                    }
+                }
+
+                viewModel.requests.isEmpty() -> {
+                    Box(
+                        modifier = Modifier.weight(1f).padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text("🔨", fontSize = 48.sp)
+                            Text(
+                                "لا توجد طلبات حالياً",
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center,
+                            )
+                            Text(
+                                "سيظهر هنا طلبات المشترين بمجرد نشرها",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
                             )
                         }
                     }
                 }
-                items(requests, key = { it.id }) { request ->
-                    RequestCard(
-                        request    = request,
-                        tick       = tick,
-                        onBidClick = { onRequestClick(request.id) },
-                    )
+
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        item(key = "feed_header") {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text("🔨", fontSize = 20.sp)
+                                    Text(
+                                        "قدّم أعلى عرض بالتوكنز لتحصل على بيانات المشتري",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                            }
+                        }
+                        items(viewModel.requests, key = { it.id }) { request ->
+                            RequestCard(
+                                request = request,
+                                currentUserId = viewModel.currentUserId ?: "",
+                                tick = tick,
+                                onBidClick = { onRequestClick(request.id) },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -149,11 +247,12 @@ fun BrokerFeedContent(
 
 @Composable
 private fun RequestCard(
-    request: BuyerRequest,
+    request: RequestDto,
+    currentUserId: String,
     tick: Long,
     onBidClick: () -> Unit,
 ) {
-    val remaining = (request.endsAt - tick).coerceAtLeast(0L)
+    val remaining = (request.expiresAtMillis - tick).coerceAtLeast(0L)
     val isExpired = remaining == 0L
     val hours = remaining / 3_600_000L
     val minutes = (remaining % 3_600_000L) / 60_000L
@@ -165,6 +264,9 @@ private fun RequestCard(
         hours < 12 -> Color(0xFFE65100)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
+
+    val myBid: BidDto? = if (currentUserId.isNotEmpty()) request.myBid(currentUserId) else null
+    val amIWinning = currentUserId.isNotEmpty() && request.amIWinning(currentUserId)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -190,7 +292,7 @@ private fun RequestCard(
                         shape = MaterialTheme.shapes.small,
                     ) {
                         Text(
-                            request.vehicleType.label,
+                            request.vehicleTypeLabel,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -232,9 +334,10 @@ private fun RequestCard(
                 fontWeight = FontWeight.SemiBold,
             )
 
-            if (request.notes.isNotBlank()) {
+            val notes = request.notes
+            if (!notes.isNullOrBlank()) {
                 Text(
-                    request.notes,
+                    notes,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -262,20 +365,19 @@ private fun RequestCard(
                     )
                 }
 
-                val myBid = request.myBid
                 if (myBid != null) {
                     Surface(
-                        color = if (request.amIWinning)
+                        color = if (amIWinning)
                             Color(0xFF1B5E20).copy(alpha = 0.15f)
                         else
                             Color(0xFFE65100).copy(alpha = 0.12f),
                         shape = MaterialTheme.shapes.small,
                     ) {
                         Text(
-                            if (request.amIWinning) "أنت الأعلى 🏆" else "هناك عرض أعلى ⚡",
+                            if (amIWinning) "أنت الأعلى 🏆" else "هناك عرض أعلى ⚡",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (request.amIWinning) Color(0xFF1B5E20) else Color(0xFFE65100),
+                            color = if (amIWinning) Color(0xFF1B5E20) else Color(0xFFE65100),
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
@@ -296,7 +398,6 @@ private fun RequestCard(
             }
 
             // Already bid — show current bid + upgrade link
-            val myBid = request.myBid
             if (myBid != null && !isExpired) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

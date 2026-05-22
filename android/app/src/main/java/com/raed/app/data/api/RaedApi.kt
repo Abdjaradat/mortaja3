@@ -81,6 +81,22 @@ interface RaedApi {
 
     @POST("conversations/{id}/messages")
     suspend fun sendMessage(@Path("id") id: String, @Body request: SendMessageRequest): Response<MessageDto>
+
+    // Requests / Auction
+    @POST("requests")
+    suspend fun postRequest(@Body body: PostRequestBody): Response<RequestDto>
+
+    @GET("requests")
+    suspend fun getRequests(@Query("mine") mine: Boolean? = null): Response<List<RequestDto>>
+
+    @GET("requests/{id}")
+    suspend fun getRequest(@Path("id") id: String): Response<RequestDto>
+
+    @POST("requests/{id}/bid")
+    suspend fun placeBid(@Path("id") id: String, @Body body: BidBody): Response<BidDto>
+
+    @POST("requests/{id}/close")
+    suspend fun closeRequest(@Path("id") id: String, @Body body: CloseBody): Response<CloseResultDto>
 }
 
 @kotlinx.serialization.Serializable

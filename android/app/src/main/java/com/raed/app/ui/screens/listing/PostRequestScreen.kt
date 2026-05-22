@@ -20,9 +20,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import com.raed.app.data.mock.*
+import androidx.lifecycle.viewModelScope
+import com.raed.app.data.api.RaedApi
+import com.raed.app.data.api.models.PostRequestBody
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -31,15 +34,32 @@ import androidx.compose.runtime.setValue
 
 private val Gold = Color(0xFFC9A961)
 
+private val VEHICLE_TYPES = listOf(
+    "SUV" to "SUV",
+    "SEDAN" to "سيدان",
+    "HYBRID" to "هايبرد",
+    "EV" to "كهربائي",
+    "OTHER" to "بيكأب",
+)
+
+private val GOVERNORATES = listOf(
+    "عمّان", "إربد", "الزرقاء", "العقبة", "المفرق",
+    "جرش", "عجلون", "الكرك", "الطفيلة", "معان", "السلط", "مادبا",
+)
+
 @HiltViewModel
-class PostRequestViewModel @Inject constructor() : ViewModel() {
-    var vehicleType by mutableStateOf(VehicleRequestType.SUV)
+class PostRequestViewModel @Inject constructor(
+    private val api: RaedApi,
+) : ViewModel() {
+    var vehicleType by mutableStateOf("SUV")
     var budgetMin by mutableStateOf("")
     var budgetMax by mutableStateOf("")
     var governorate by mutableStateOf("عمّان")
     var notes by mutableStateOf("")
     var isPosted by mutableStateOf(false)
     var postedAt by mutableLongStateOf(0L)
+    var isLoading by mutableStateOf(false)
+    var error by mutableStateOf<String?>(null)
 
     fun isValid(): Boolean {
         val min = budgetMin.toIntOrNull() ?: return false
@@ -48,20 +68,31 @@ class PostRequestViewModel @Inject constructor() : ViewModel() {
     }
 
     fun post() {
-        val now = System.currentTimeMillis()
-        MockRequestsSource.addRequest(
-            BuyerRequest(
-                id = "req-$now",
-                vehicleType = vehicleType,
-                budgetMin = budgetMin.toInt(),
-                budgetMax = budgetMax.toInt(),
-                governorate = governorate,
-                notes = notes.trim(),
-                postedAt = now,
-            )
-        )
-        postedAt = now
-        isPosted = true
+        viewModelScope.launch {
+            isLoading = true
+            error = null
+            try {
+                val response = api.postRequest(
+                    PostRequestBody(
+                        vehicleType = vehicleType,
+                        budgetMin = budgetMin.toInt(),
+                        budgetMax = budgetMax.toInt(),
+                        governorate = governorate,
+                        notes = notes.trim().ifBlank { null },
+                    )
+                )
+                if (response.isSuccessful) {
+                    postedAt = System.currentTimeMillis()
+                    isPosted = true
+                } else {
+                    error = "حدث خطأ أثناء نشر الطلب (${response.code()})"
+                }
+            } catch (e: Exception) {
+                error = "تعذّر الاتصال بالخادم"
+            } finally {
+                isLoading = false
+            }
+        }
     }
 }
 
@@ -71,6 +102,14 @@ fun PostRequestScreen(
     onBack: () -> Unit,
     viewModel: PostRequestViewModel = hiltViewModel(),
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(viewModel.error) {
+        val msg = viewModel.error ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(msg)
+        viewModel.error = null
+    }
+
     if (viewModel.isPosted) {
         PostedSuccessContent(postedAt = viewModel.postedAt, onBack = onBack)
         return
@@ -89,6 +128,7 @@ fun PostRequestScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -131,11 +171,11 @@ fun PostRequestScreen(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                VehicleRequestType.entries.forEach { type ->
+                VEHICLE_TYPES.forEach { (apiValue, label) ->
                     FilterChip(
-                        selected = viewModel.vehicleType == type,
-                        onClick = { viewModel.vehicleType = type },
-                        label = { Text(type.label, style = MaterialTheme.typography.bodySmall) },
+                        selected = viewModel.vehicleType == apiValue,
+                        onClick = { viewModel.vehicleType = apiValue },
+                        label = { Text(label, style = MaterialTheme.typography.bodySmall) },
                     )
                 }
             }
@@ -215,11 +255,19 @@ fun PostRequestScreen(
             Spacer(Modifier.height(4.dp))
             Button(
                 onClick = { viewModel.post() },
-                enabled = viewModel.isValid(),
+                enabled = viewModel.isValid() && !viewModel.isLoading,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Gold),
             ) {
-                Text("انشر طلبك — مجاناً 🎁", fontWeight = FontWeight.Bold)
+                if (viewModel.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                } else {
+                    Text("انشر طلبك — مجاناً 🎁", fontWeight = FontWeight.Bold)
+                }
             }
             Spacer(Modifier.height(16.dp))
         }
