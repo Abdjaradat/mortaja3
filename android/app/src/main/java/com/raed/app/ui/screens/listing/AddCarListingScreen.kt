@@ -35,7 +35,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.CreateListingRequest
-import com.raed.app.data.api.models.SpendTokenRequest
 import com.raed.app.data.mock.*
 import com.raed.app.ui.components.TokenGateBottomSheet
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
