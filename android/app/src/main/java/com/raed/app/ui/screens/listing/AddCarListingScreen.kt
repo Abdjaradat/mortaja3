@@ -63,7 +63,7 @@ class AddCarViewModel @Inject constructor(
     var fuelType by mutableStateOf(FuelType.GASOLINE)
     var transmission by mutableStateOf(Transmission.AUTOMATIC)
 
-    fun setVehicleType(vt: String) {
+    fun selectVehicleType(vt: String) {
         vehicleType = vt
         when (vt) {
             "HYBRID" -> fuelType = FuelType.HYBRID
@@ -381,7 +381,7 @@ private fun Step1Content(vm: AddCarViewModel, modifier: Modifier = Modifier) {
             bodyTypes.forEach { (label, apiValue) ->
                 FilterChip(
                     selected = vm.vehicleType == apiValue,
-                    onClick = { vm.setVehicleType(apiValue) },
+                    onClick = { vm.selectVehicleType(apiValue) },
                     label = { Text(label, style = MaterialTheme.typography.bodySmall) },
                 )
             }
