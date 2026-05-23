@@ -104,7 +104,7 @@ class AddCarViewModel @Inject constructor(
     fun prevStep() { if (currentStep > 1) currentStep-- }
 
     fun step1Valid() = make.isNotBlank() && model.isNotBlank() && mileage.isNotBlank() && color.isNotBlank()
-    fun step2Valid() = price.isNotBlank() && price.toIntOrNull() != null && phoneNumber.isNotBlank()
+    fun step2Valid() = price.isNotBlank() && price.toIntOrNull() != null
 
     fun dismissTokenGate() { showTokenGate = false }
     fun clearError() { errorMessage = null }
@@ -457,9 +457,10 @@ private fun Step2Content(vm: AddCarViewModel, modifier: Modifier = Modifier) {
         OutlinedTextField(
             value = vm.phoneNumber,
             onValueChange = { vm.phoneNumber = it.filter { c -> c.isDigit() } },
-            label = { Text("رقم التواصل *") },
+            label = { Text("رقم للتواصل (اختياري)") },
             placeholder = { Text("07XXXXXXXX") },
             prefix = { Text("+962 ") },
+            supportingText = { Text("اتركه فارغاً لاستخدام رقمك المسجل في الملف الشخصي") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,

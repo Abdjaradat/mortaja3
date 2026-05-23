@@ -19,6 +19,7 @@ model User {
   isActive          Boolean            @default(true)
   isBlocked         Boolean            @default(false)
   fcmToken          String?
+  phoneNumber       String?
   tokenBalance      Int                @default(500)
   totalTokensEarned Int                @default(500)
   totalTokensSpent  Int                @default(0)

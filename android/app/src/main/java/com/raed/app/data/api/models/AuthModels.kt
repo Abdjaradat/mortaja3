@@ -33,6 +33,7 @@ data class RefreshTokenRequest(
 data class UpdateProfileRequest(
     @SerialName("fullName") val fullName: String? = null,
     @SerialName("governorate") val governorate: String? = null,
+    @SerialName("phoneNumber") val phoneNumber: String? = null,
 )
 
 @Serializable

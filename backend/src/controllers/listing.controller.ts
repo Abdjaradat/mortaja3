@@ -296,7 +296,12 @@ export async function revealContact(req: AuthenticatedRequest, res: Response): P
 
   const listing = await prisma.listing.findUnique({
     where: { id },
-    select: { phoneNumber: true, status: true, listingCategory: true },
+    select: {
+      phoneNumber: true,
+      status: true,
+      listingCategory: true,
+      officer: { select: { phoneNumber: true } },
+    },
   });
 
   if (!listing || listing.status === ListingStatus.REMOVED) {
@@ -304,14 +309,16 @@ export async function revealContact(req: AuthenticatedRequest, res: Response): P
     return;
   }
 
-  if (!listing.phoneNumber) {
+  // Priority: listing-specific phone → seller profile phone → fallback
+  const phone = listing.phoneNumber ?? listing.officer?.phoneNumber ?? null;
+  if (!phone) {
     res.json({ phoneNumber: "غير متوفر", charged: false });
     return;
   }
 
   try {
     await applyTokens(req.user!.userId, TxReason.REVEAL_CONTACT, id);
-    res.json({ phoneNumber: listing.phoneNumber, charged: true });
+    res.json({ phoneNumber: phone, charged: true });
   } catch (err: unknown) {
     if (err instanceof Error && err.message.startsWith("INSUFFICIENT_TOKENS")) {
       const current = err.message.split(":")[1];

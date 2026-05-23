@@ -142,6 +142,7 @@ data class MeResponse(
     val totalTokensEarned: Int = 0,
     val totalTokensSpent: Int = 0,
     val referralCode: String? = null,
+    val phoneNumber: String? = null,
     val officerProfile: OfficerProfileInfo? = null,
 ) {
     val isExemptVerified get() = officerProfile?.verificationState == "VERIFIED"

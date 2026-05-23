@@ -8,6 +8,7 @@ const updateProfileSchema = z.object({
   fullName: z.string().min(2).max(100).optional(),
   governorate: z.string().optional(),
   photoUrl: z.string().url().optional(),
+  phoneNumber: z.string().max(20).optional(),
 });
 
 const officerProfileSchema = z.object({
@@ -26,6 +27,7 @@ export async function getMe(req: AuthenticatedRequest, res: Response): Promise<v
       photoUrl: true,
       userType: true,
       createdAt: true,
+      phoneNumber: true,
       tokenBalance: true,
       totalTokensEarned: true,
       totalTokensSpent: true,
@@ -59,7 +61,7 @@ export async function updateMe(req: AuthenticatedRequest, res: Response): Promis
   const user = await prisma.user.update({
     where: { id: req.user!.userId },
     data: parsed.data,
-    select: { id: true, fullName: true, governorate: true, photoUrl: true, userType: true },
+    select: { id: true, fullName: true, governorate: true, photoUrl: true, userType: true, phoneNumber: true },
   });
 
   res.json(user);

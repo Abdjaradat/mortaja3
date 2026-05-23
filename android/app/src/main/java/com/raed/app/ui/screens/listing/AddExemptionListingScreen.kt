@@ -71,7 +71,7 @@ class AddExemptionViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
-    fun isValid() = price.isNotBlank() && price.toIntOrNull() != null && phoneNumber.isNotBlank()
+    fun isValid() = price.isNotBlank() && price.toIntOrNull() != null
 
     fun dismissTokenGate() { showTokenGate = false }
     fun clearError() { errorMessage = null }
@@ -409,9 +409,10 @@ fun AddExemptionListingScreen(
             OutlinedTextField(
                 value = viewModel.phoneNumber,
                 onValueChange = { viewModel.phoneNumber = it.filter { c -> c.isDigit() } },
-                label = { Text("رقم التواصل *") },
+                label = { Text("رقم للتواصل (اختياري)") },
                 placeholder = { Text("07XXXXXXXX") },
                 prefix = { Text("+962 ") },
+                supportingText = { Text("اتركه فارغاً لاستخدام رقمك المسجل في الملف الشخصي") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,

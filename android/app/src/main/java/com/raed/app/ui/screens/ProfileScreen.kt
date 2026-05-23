@@ -8,8 +8,10 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
@@ -63,12 +65,16 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun saveProfile(fullName: String, governorate: String) {
+    fun saveProfile(fullName: String, governorate: String, phoneNumber: String) {
         viewModelScope.launch {
             _isSaving.value = true
             try {
                 val response = api.updateMe(
-                    UpdateProfileRequest(fullName = fullName.ifBlank { null }, governorate = governorate.ifBlank { null })
+                    UpdateProfileRequest(
+                        fullName = fullName.ifBlank { null },
+                        governorate = governorate.ifBlank { null },
+                        phoneNumber = phoneNumber.filter { it.isDigit() }.ifBlank { null },
+                    )
                 )
                 if (response.isSuccessful) {
                     _profile.value = response.body()
@@ -108,6 +114,7 @@ fun ProfileContent(
 
     var fullName by remember(profile) { mutableStateOf(profile?.fullName ?: "") }
     var governorate by remember(profile) { mutableStateOf(profile?.governorate ?: "") }
+    var phoneNumber by remember(profile) { mutableStateOf(profile?.phoneNumber ?: "") }
     var dropdownExpanded by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
 
@@ -181,8 +188,21 @@ fun ProfileContent(
                     }
                 }
 
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it.filter { c -> c.isDigit() } },
+                    label = { Text("رقم التواصل") },
+                    placeholder = { Text("07X XXX XXXX") },
+                    prefix = { Text("+962 ") },
+                    supportingText = { Text("يُستخدم عند الكشف عن رقمك في الإعلانات", style = MaterialTheme.typography.labelSmall) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = !isSaving,
+                )
+
                 Button(
-                    onClick = { viewModel.saveProfile(fullName, governorate) },
+                    onClick = { viewModel.saveProfile(fullName, governorate, phoneNumber) },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSaving,
                 ) {
