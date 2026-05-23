@@ -88,7 +88,13 @@
       "PowerShell(curl.exe -s -w \"`nHTTP_STATUS:%{http_code}\" \"http://localhost:3000/api/v1/listings?governorate=%D8%B9%D9%85%D8%A7%D9%86&sort=price_asc\")",
       "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -list-avds)",
       "PowerShell(Start-Process -FilePath \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\emulator\\\\emulator.exe\" -ArgumentList \"-avd Pixel_6_API_33 -no-snapshot-load\" -WindowStyle Normal)",
-      "PowerShell(curl.exe -s \"http://localhost:3000/api/v1/requests\" -H \"Authorization: Bearer invalid\" | ConvertFrom-Json | ConvertTo-Json)"
+      "PowerShell(curl.exe -s \"http://localhost:3000/api/v1/requests\" -H \"Authorization: Bearer invalid\" | ConvertFrom-Json | ConvertTo-Json)",
+      "Bash(./gradlew compileDebugKotlin --no-daemon)",
+      "Bash(.\\\\gradlew compileDebugKotlin --no-daemon)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Abdul\\\\Mortaja3\\\\backend\\\\prisma\\\\migrations\\\\20260523140000_add_listing_category_medical_exempt\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"done\")",
+      "PowerShell(cd \"C:\\\\Users\\\\Abdul\\\\Mortaja3\\\\backend\"; $env:DATABASE_URL = \\(Get-Content .env | Where-Object { $_ -match \"^DATABASE_URL\" } | ForEach-Object { \\($_ -split \"=\", 2\\)[1] }\\); npx prisma db execute --file prisma/migrations/20260523140000_add_listing_category_medical_exempt/migration.sql --schema prisma/schema.prisma 2>&1)"
     ]
   }
 }

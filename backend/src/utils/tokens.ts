@@ -2,16 +2,20 @@ import prisma from "./prisma.js";
 import { TxReason, TxType } from "@prisma/client";
 
 export const TOKEN_COSTS: Record<TxReason, number> = {
-  WELCOME:            500,
-  AD_WATCH:           10,
-  REFERRAL:           100,
-  POST_LISTING:       -50,
-  POST_EXEMPTION:     -30,
-  REVEAL_CONTACT:     -20,
-  START_CONVERSATION: -10,
-  BOOST_LISTING:      -100,
-  RENEW_LISTING:      -25,
-  PURCHASE:           0,   // variable, passed explicitly
+  WELCOME:                    500,
+  AD_WATCH:                   10,
+  REFERRAL:                   100,
+  POST_LISTING:               -50,
+  POST_EXEMPTION:             -30,
+  REVEAL_CONTACT:             -20,
+  START_CONVERSATION:         -10,
+  BOOST_LISTING:              -100,
+  RENEW_LISTING:              -25,
+  PURCHASE:                   0,   // variable, passed explicitly
+  REGISTER_CLEARANCE_AGENT:   -50,
+  CLEARANCE_OFFER:            -10,
+  CLEARANCE_SELECT:           -30,
+  CLEARANCE_RATE_BONUS:       20,
 };
 
 export const AD_WATCH_DAILY_LIMIT = 20;
