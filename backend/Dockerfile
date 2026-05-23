@@ -4,7 +4,9 @@ COPY backend/package*.json ./
 COPY backend/prisma ./prisma/
 RUN npm ci
 RUN npx prisma generate
-COPY backend/ .
+COPY backend/tsconfig*.json ./
+COPY backend/src ./src
+COPY backend/prisma.config.ts ./
 RUN npm run build
 
 FROM node:20-alpine AS runner
