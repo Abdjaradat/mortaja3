@@ -45,26 +45,37 @@ app.use("/api/v1/requests", requestRoutes);
 app.use("/api/v1/clearance", clearanceRoutes);
 
 app.get("/health", async (_req, res) => {
-  let dbStatus = "untested";
-  let dbError: string | null = null;
   try {
     await prisma.$queryRaw`SELECT 1`;
-    dbStatus = "connected";
-  } catch (e: unknown) {
-    dbStatus = "error";
-    dbError = e instanceof Error ? e.message : String(e);
+    res.json({
+      status: "ok",
+      db: "connected",
+      firebase: process.env["FIREBASE_PROJECT_ID"] ? "set" : "missing",
+      node_env: process.env["NODE_ENV"],
+    });
+  } catch (error: unknown) {
+    res.status(500).json({
+      status: "error",
+      db: "failed",
+      dbError: error instanceof Error ? error.message : String(error),
+      node_env: process.env["NODE_ENV"],
+    });
   }
-  res.json({
-    status: "ok",
-    db: process.env["DATABASE_URL"] ? dbStatus : "missing",
-    dbError,
-    firebase: process.env["FIREBASE_PROJECT_ID"] ? "set" : "missing",
-    node_env: process.env["NODE_ENV"],
-  });
 });
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
+});
+
+// Global error handler — logs the real error and returns it in development
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  console.error("[ERROR]", message, stack);
+  res.status(500).json({
+    error: "Internal Server Error",
+    detail: process.env["NODE_ENV"] !== "production" ? message : undefined,
+  });
 });
 
 export default app;
