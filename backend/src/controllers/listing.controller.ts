@@ -166,38 +166,17 @@ export async function createListing(req: AuthenticatedRequest, res: Response): P
   }
 
   const category = parsed.data.listingCategory ?? ListingCategory.MORTAJA3;
-  const user = await prisma.user.findUnique({
+
+  const userProfiles = await prisma.user.findUnique({
     where: { id: req.user!.userId },
-    include: {
-      officerProfile: true,
-      medicalExemptProfile: true,
+    select: {
+      officerProfile: { select: { id: true } },
+      medicalExemptProfile: { select: { id: true } },
     },
   });
 
-  if (!user) { res.status(404).json({ error: "User not found" }); return; }
-
-  const officerVerified = user.officerProfile?.verificationState === "VERIFIED";
-  const medicalVerified = user.medicalExemptProfile?.verificationState === "VERIFIED";
-
-  if (category === ListingCategory.MORTAJA3) {
-    if (!officerVerified && !medicalVerified) {
-      res.status(403).json({ error: "Must be a verified officer or medical exempt to post Mortaja3 listings" });
-      return;
-    }
-  } else {
-    // EXEMPTION_RIGHT and REGULAR require officer verification
-    if (!officerVerified) {
-      res.status(403).json({ error: "Officer must be verified to post listings" });
-      return;
-    }
-    if (category === ListingCategory.EXEMPTION_RIGHT && user.officerProfile?.exemptionUsed) {
-      res.status(400).json({ error: "Exemption has already been used" });
-      return;
-    }
-  }
-
   const sellerType = parsed.data.sellerType ??
-    (user.officerProfile ? "OFFICER" : user.medicalExemptProfile ? "MEDICAL_EXEMPT" : undefined);
+    (userProfiles?.officerProfile ? "OFFICER" : userProfiles?.medicalExemptProfile ? "MEDICAL_EXEMPT" : undefined);
 
   const listing = await prisma.listing.create({
     data: {
@@ -326,23 +305,6 @@ export async function revealContact(req: AuthenticatedRequest, res: Response): P
   if (!listing || listing.status === ListingStatus.REMOVED) {
     res.status(404).json({ error: "Listing not found" });
     return;
-  }
-
-  if (listing.listingCategory === ListingCategory.MORTAJA3) {
-    const buyer = await prisma.user.findUnique({
-      where: { id: req.user!.userId },
-      include: {
-        officerProfile: { select: { verificationState: true } },
-        medicalExemptProfile: { select: { verificationState: true } },
-      },
-    });
-    const isAllowed =
-      buyer?.officerProfile?.verificationState === "VERIFIED" ||
-      buyer?.medicalExemptProfile?.verificationState === "VERIFIED";
-    if (!isAllowed) {
-      res.status(403).json({ error: "MORTAJA3_RESTRICTED" });
-      return;
-    }
   }
 
   if (!listing.phoneNumber) {

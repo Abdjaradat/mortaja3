@@ -10,7 +10,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.raed.app.ui.screens.*
-import com.raed.app.ui.screens.MedicalExemptRegistrationScreen
 import com.raed.app.ui.screens.auth.*
 import com.raed.app.ui.screens.clearance.*
 import com.raed.app.ui.screens.listing.*
@@ -156,12 +155,6 @@ fun RaedNavGraph(navController: NavHostController = rememberNavController()) {
                 onNavigateToWallet = { navController.navigate(Screen.TokenWallet.route) },
                 onNavigateToConversation = { id, name ->
                     navController.navigate(Screen.Conversation.createRoute(id, name))
-                },
-                onNavigateToOfficerVerification = {
-                    navController.navigate(Screen.OfficerVerification.route)
-                },
-                onNavigateToMedicalExempt = {
-                    navController.navigate(Screen.MedicalExemptRegistration.route)
                 },
             )
         }
