@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import prisma from "./utils/prisma.js";
 
 import { globalLimiter } from "./middleware/rateLimiter.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -43,8 +44,23 @@ app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/requests", requestRoutes);
 app.use("/api/v1/clearance", clearanceRoutes);
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", version: "1.0.0" });
+app.get("/health", async (_req, res) => {
+  let dbStatus = "untested";
+  let dbError: string | null = null;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    dbStatus = "connected";
+  } catch (e: unknown) {
+    dbStatus = "error";
+    dbError = e instanceof Error ? e.message : String(e);
+  }
+  res.json({
+    status: "ok",
+    db: process.env["DATABASE_URL"] ? dbStatus : "missing",
+    dbError,
+    firebase: process.env["FIREBASE_PROJECT_ID"] ? "set" : "missing",
+    node_env: process.env["NODE_ENV"],
+  });
 });
 
 app.use((_req, res) => {
