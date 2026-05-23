@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Message
@@ -21,6 +22,7 @@ import androidx.navigation.NavController
 import com.raed.app.R
 import com.raed.app.navigation.Screen
 import com.raed.app.ui.screens.auth.AuthViewModel
+import com.raed.app.ui.screens.clearance.ClearanceHomeContent
 import com.raed.app.ui.screens.token.TokenViewModel
 
 private val Gold = Color(0xFFC9A961)
@@ -121,17 +123,62 @@ fun HomeScreen(
         },
     ) { padding ->
         when (selectedTab) {
-            0 -> ListingsContent(
-                onCarClick = { id -> navController.navigate(Screen.ListingDetail.createRoute("OWNED", id)) },
-                onExemptionClick = { id -> navController.navigate(Screen.ListingDetail.createRoute("SEEKING", id)) },
-                onCalcClick = { price -> navController.navigate(Screen.Calculator.createRoute(price.toString())) },
-                listState = listState,
-                modifier = Modifier.padding(padding),
-            )
-            1 -> BrokerFeedContent(
-                onRequestClick = { id -> navController.navigate(Screen.Bid.createRoute(id)) },
-                modifier = Modifier.padding(padding),
-            )
+            0 -> {
+                var listingsSubTab by rememberSaveable { mutableIntStateOf(0) }
+                androidx.compose.foundation.layout.Column(
+                    modifier = Modifier.padding(padding).fillMaxSize(),
+                ) {
+                    TabRow(selectedTabIndex = listingsSubTab) {
+                        Tab(selected = listingsSubTab == 0, onClick = { listingsSubTab = 0 }, text = { Text("مرتجع") })
+                        Tab(selected = listingsSubTab == 1, onClick = { listingsSubTab = 1 }, text = { Text("سيارات") })
+                        Tab(selected = listingsSubTab == 2, onClick = { listingsSubTab = 2 }, text = { Text("إعفاءات") })
+                    }
+                    when (listingsSubTab) {
+                        0 -> ListingsContent(
+                            category = "MORTAJA3",
+                            onListingClick = { id -> navController.navigate(Screen.ListingDetail.createRoute("MORTAJA3", id)) },
+                            onCalcClick = { price -> navController.navigate(Screen.Calculator.createRoute(price.toString())) },
+                            listState = listState,
+                            modifier = Modifier.weight(1f),
+                        )
+                        1 -> ListingsContent(
+                            category = "REGULAR",
+                            onListingClick = { id -> navController.navigate(Screen.ListingDetail.createRoute("REGULAR", id)) },
+                            onCalcClick = { price -> navController.navigate(Screen.Calculator.createRoute(price.toString())) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        2 -> ListingsContent(
+                            category = "EXEMPTION_RIGHT",
+                            onListingClick = { id -> navController.navigate(Screen.ListingDetail.createRoute("EXEMPTION_RIGHT", id)) },
+                            onCalcClick = { price -> navController.navigate(Screen.Calculator.createRoute(price.toString())) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
+            1 -> {
+                var subTab by rememberSaveable { mutableIntStateOf(0) }
+                androidx.compose.foundation.layout.Column(
+                    modifier = Modifier.padding(padding).fillMaxSize(),
+                ) {
+                    TabRow(selectedTabIndex = subTab) {
+                        Tab(selected = subTab == 0, onClick = { subTab = 0 }, text = { Text(stringResource(R.string.exemptions)) })
+                        Tab(selected = subTab == 1, onClick = { subTab = 1 }, text = { Text(stringResource(R.string.clearance)) })
+                    }
+                    when (subTab) {
+                        0 -> BrokerFeedContent(
+                            onRequestClick = { id -> navController.navigate(Screen.Bid.createRoute(id)) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        1 -> ClearanceHomeContent(
+                            onPostRequest = { navController.navigate(Screen.PostClearanceRequest.route) },
+                            onRequestClick = { id -> navController.navigate(Screen.ClearanceRequestDetail.createRoute(id)) },
+                            onRegisterAgent = { navController.navigate(Screen.RegisterAgent.route) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                }
+            }
             3 -> ConversationsContent(
                 onConversationClick = { id, name -> navController.navigate(Screen.Conversation.createRoute(id, name)) },
                 modifier = Modifier.padding(padding),

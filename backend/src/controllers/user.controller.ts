@@ -38,6 +38,13 @@ export async function getMe(req: AuthenticatedRequest, res: Response): Promise<v
           exemptionUsed: true,
         },
       },
+      medicalExemptProfile: {
+        select: {
+          verificationState: true,
+          exemptionUsed: true,
+          verifiedAt: true,
+        },
+      },
     },
   });
 
@@ -126,6 +133,51 @@ export async function getOfficerProfileStatus(req: AuthenticatedRequest, res: Re
 
   if (!profile) {
     res.status(404).json({ error: "Officer profile not found" });
+    return;
+  }
+
+  res.json(profile);
+}
+
+const medicalExemptSchema = z.object({
+  documentUrl: z.string().min(1),
+});
+
+export async function submitMedicalExemptProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const parsed = medicalExemptSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten() });
+    return;
+  }
+
+  const existing = await prisma.medicalExemptProfile.findUnique({
+    where: { userId: req.user!.userId },
+  });
+
+  if (existing) {
+    res.status(409).json({ error: "Medical exempt profile already submitted" });
+    return;
+  }
+
+  const profile = await prisma.medicalExemptProfile.create({
+    data: {
+      userId: req.user!.userId,
+      documentUrl: parsed.data.documentUrl,
+    },
+    select: { verificationState: true, exemptionUsed: true, verifiedAt: true },
+  });
+
+  res.status(201).json(profile);
+}
+
+export async function getMedicalExemptProfileStatus(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const profile = await prisma.medicalExemptProfile.findUnique({
+    where: { userId: req.user!.userId },
+    select: { verificationState: true, exemptionUsed: true, verifiedAt: true },
+  });
+
+  if (!profile) {
+    res.status(404).json({ error: "Medical exempt profile not found" });
     return;
   }
 

@@ -18,6 +18,10 @@ data class ListingDto(
     @SerialName("marketPrice") val marketPrice: Int? = null,
     @SerialName("expectedPrice") val expectedPrice: Int? = null,
     @SerialName("listingType") val listingType: String,
+    @SerialName("listingCategory") val listingCategory: String = "MORTAJA3",
+    @SerialName("sellerType") val sellerType: String? = null,
+    @SerialName("restrictionEndsAt") val restrictionEndsAt: String? = null,
+    @SerialName("originalPrice") val originalPrice: Int? = null,
     @SerialName("tier") val tier: String = "FREE",
     @SerialName("tierExpiresAt") val tierExpiresAt: String? = null,
     @SerialName("governorate") val governorate: String,
@@ -29,6 +33,9 @@ data class ListingDto(
     @SerialName("officer") val officer: OfficerSummaryDto? = null,
 ) {
     val isOwned get() = listingType == "OWNED"
+    val isMortaja3 get() = listingCategory == "MORTAJA3"
+    val isRegular get() = listingCategory == "REGULAR"
+    val isExemptionRight get() = listingCategory == "EXEMPTION_RIGHT"
     val isBoosted get() = tier != "FREE"
     val isVerified get() = officer?.officerProfile?.verificationState == "VERIFIED"
     val displayYear get() = yearMin?.toString() ?: yearMax?.toString() ?: ""
@@ -82,9 +89,25 @@ data class CreateListingRequest(
     @SerialName("marketPrice") val marketPrice: Int? = null,
     @SerialName("expectedPrice") val expectedPrice: Int? = null,
     @SerialName("listingType") val listingType: String,
+    @SerialName("listingCategory") val listingCategory: String? = null,
+    @SerialName("sellerType") val sellerType: String? = null,
+    @SerialName("restrictionEndsAt") val restrictionEndsAt: String? = null,
+    @SerialName("originalPrice") val originalPrice: Int? = null,
     @SerialName("governorate") val governorate: String,
     @SerialName("notes") val notes: String? = null,
     @SerialName("photos") val photos: List<String> = emptyList(),
+)
+
+@Serializable
+data class MedicalExemptProfileStatusDto(
+    @SerialName("verificationState") val verificationState: String,
+    @SerialName("exemptionUsed") val exemptionUsed: Boolean = false,
+    @SerialName("verifiedAt") val verifiedAt: String? = null,
+)
+
+@Serializable
+data class MedicalExemptProfileRequest(
+    @SerialName("documentUrl") val documentUrl: String,
 )
 
 @Serializable

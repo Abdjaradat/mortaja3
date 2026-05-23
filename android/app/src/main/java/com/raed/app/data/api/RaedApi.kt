@@ -32,11 +32,18 @@ interface RaedApi {
     @GET("users/me/officer-profile/status")
     suspend fun getOfficerProfileStatus(): Response<OfficerProfileStatusDto>
 
+    @POST("users/me/medical-exempt-profile")
+    suspend fun submitMedicalExemptProfile(@Body request: MedicalExemptProfileRequest): Response<MedicalExemptProfileStatusDto>
+
+    @GET("users/me/medical-exempt-profile/status")
+    suspend fun getMedicalExemptProfileStatus(): Response<MedicalExemptProfileStatusDto>
+
     // Listings
     @GET("listings")
     suspend fun getListings(
         @Query("governorate") governorate: String? = null,
         @Query("type") type: String? = null,
+        @Query("category") category: String? = null,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
     ): Response<ListingsResponse>
@@ -97,6 +104,37 @@ interface RaedApi {
 
     @POST("requests/{id}/close")
     suspend fun closeRequest(@Path("id") id: String, @Body body: CloseBody): Response<CloseResultDto>
+
+    // Clearance Marketplace
+    @POST("clearance/agents")
+    suspend fun registerClearanceAgent(@Body body: RegisterAgentBody): Response<ClearanceAgentDto>
+
+    @GET("clearance/agents")
+    suspend fun getClearanceAgents(@Query("location") location: String? = null): Response<List<ClearanceAgentDto>>
+
+    @GET("clearance/agents/me")
+    suspend fun getMyClearanceAgent(): Response<ClearanceAgentDto>
+
+    @GET("clearance/agents/{id}")
+    suspend fun getClearanceAgent(@Path("id") id: String): Response<ClearanceAgentDto>
+
+    @POST("clearance/requests")
+    suspend fun postClearanceRequest(@Body body: PostClearanceRequestBody): Response<ClearanceRequestDto>
+
+    @GET("clearance/requests")
+    suspend fun getClearanceRequests(@Query("mine") mine: Boolean? = null): Response<List<ClearanceRequestDto>>
+
+    @GET("clearance/requests/{id}")
+    suspend fun getClearanceRequest(@Path("id") id: String): Response<ClearanceRequestDto>
+
+    @POST("clearance/requests/{id}/offer")
+    suspend fun submitClearanceOffer(@Path("id") id: String, @Body body: SubmitOfferBody): Response<ClearanceOfferDto>
+
+    @POST("clearance/requests/{id}/select")
+    suspend fun selectClearanceAgent(@Path("id") id: String, @Body body: SelectAgentBody): Response<SelectAgentResultDto>
+
+    @POST("clearance/requests/{id}/rate")
+    suspend fun rateClearanceAgent(@Path("id") id: String, @Body body: RateAgentBody): Response<RateAgentResultDto>
 }
 
 @kotlinx.serialization.Serializable
@@ -111,7 +149,12 @@ data class MeResponse(
     val totalTokensSpent: Int = 0,
     val referralCode: String? = null,
     val officerProfile: OfficerProfileInfo? = null,
-)
+    val medicalExemptProfile: MedicalExemptProfileInfo? = null,
+) {
+    val isExemptVerified get() =
+        officerProfile?.verificationState == "VERIFIED" ||
+        medicalExemptProfile?.verificationState == "VERIFIED"
+}
 
 @kotlinx.serialization.Serializable
 data class OfficerProfileInfo(
@@ -119,4 +162,11 @@ data class OfficerProfileInfo(
     val status: String? = null,
     val verificationState: String,
     val exemptionUsed: Boolean = false,
+)
+
+@kotlinx.serialization.Serializable
+data class MedicalExemptProfileInfo(
+    val verificationState: String,
+    val exemptionUsed: Boolean = false,
+    val verifiedAt: String? = null,
 )

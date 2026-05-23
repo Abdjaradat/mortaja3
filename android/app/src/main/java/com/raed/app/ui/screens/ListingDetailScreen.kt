@@ -26,6 +26,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.data.api.RaedApi
+import com.raed.app.data.api.MeResponse
 import com.raed.app.data.api.models.ListingDto
 import com.raed.app.data.api.models.StartConversationRequest
 import com.raed.app.data.mock.toJod
@@ -73,10 +74,21 @@ class ListingDetailViewModel @Inject constructor(
         private set
     var startConversationResult by mutableStateOf<Pair<String, String>?>(null) // id, otherUserName
         private set
+    var currentUser by mutableStateOf<MeResponse?>(null)
+        private set
+    var showExemptionGate by mutableStateOf(false)
 
     init {
         load()
         refreshBalance()
+        loadCurrentUser()
+    }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            runCatching { api.getMe() }
+                .onSuccess { r -> if (r.isSuccessful) currentUser = r.body() }
+        }
     }
 
     fun load() {
@@ -100,7 +112,14 @@ class ListingDetailViewModel @Inject constructor(
         }
     }
 
+    private fun isMortaja3Allowed(): Boolean {
+        val cat = listing?.listingCategory ?: return true
+        if (cat != "MORTAJA3") return true
+        return currentUser?.isExemptVerified == true
+    }
+
     fun revealContact() {
+        if (!isMortaja3Allowed()) { showExemptionGate = true; return }
         if (tokenBalance < 20) {
             tokenGateRequired = 20
             showTokenGate = true
@@ -128,6 +147,7 @@ class ListingDetailViewModel @Inject constructor(
     }
 
     fun onMessageClick() {
+        if (!isMortaja3Allowed()) { showExemptionGate = true; return }
         val officerId = listing?.officer?.id ?: return
         if (tokenBalance < 10) {
             tokenGateRequired = 10
@@ -158,6 +178,7 @@ class ListingDetailViewModel @Inject constructor(
     fun dismissPhone() { revealedPhone = null }
     fun clearSnackbar() { snackbarMessage = null }
     fun clearStartConversation() { startConversationResult = null }
+    fun dismissExemptionGate() { showExemptionGate = false }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -167,6 +188,8 @@ fun ListingDetailScreen(
     onNavigateToCalculator: (price: Int) -> Unit,
     onNavigateToWallet: () -> Unit,
     onNavigateToConversation: (conversationId: String, name: String) -> Unit,
+    onNavigateToOfficerVerification: () -> Unit = {},
+    onNavigateToMedicalExempt: () -> Unit = {},
     viewModel: ListingDetailViewModel = hiltViewModel(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -203,14 +226,14 @@ fun ListingDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (listing != null) {
-                if (listing.isOwned) {
+                if (listing.isExemptionRight) {
+                    ExemptionBottomBar(onMessage = { viewModel.onMessageClick() })
+                } else {
                     CarBottomBar(
                         isSpending = viewModel.isSpending,
                         onMessage = { viewModel.onMessageClick() },
                         onReveal = { viewModel.revealContact() },
                     )
-                } else {
-                    ExemptionBottomBar(onMessage = { viewModel.onMessageClick() })
                 }
             }
         },
@@ -231,14 +254,14 @@ fun ListingDetailScreen(
                 }
             }
             listing != null -> {
-                if (listing.isOwned) {
-                    CarDetailContent(listing = listing, modifier = Modifier.padding(padding))
-                } else {
+                if (listing.isExemptionRight) {
                     ExemptionDetailContent(
                         listing = listing,
                         modifier = Modifier.padding(padding),
                         onCalcClick = { onNavigateToCalculator(listing.expectedPrice ?: 0) },
                     )
+                } else {
+                    CarDetailContent(listing = listing, modifier = Modifier.padding(padding))
                 }
             }
         }
@@ -270,6 +293,14 @@ fun ListingDetailScreen(
             confirmButton = {
                 TextButton(onClick = { viewModel.dismissPhone() }) { Text("حسناً") }
             },
+        )
+    }
+
+    if (viewModel.showExemptionGate) {
+        ExemptionGateBottomSheet(
+            onNavigateToOfficer = { viewModel.dismissExemptionGate(); onNavigateToOfficerVerification() },
+            onNavigateToMedicalExempt = { viewModel.dismissExemptionGate(); onNavigateToMedicalExempt() },
+            onDismiss = { viewModel.dismissExemptionGate() },
         )
     }
 }
@@ -448,6 +479,54 @@ private fun ExemptionBottomBar(onMessage: () -> Unit) {
 private fun DetailChip(text: String) {
     Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceVariant) {
         Text(text = text, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ExemptionGateBottomSheet(
+    onNavigateToOfficer: () -> Unit,
+    onNavigateToMedicalExempt: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text("🔒", style = MaterialTheme.typography.displaySmall)
+            Text(
+                "هذا الإعلان متاح للمعفيين فقط",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Text(
+                "هل أنت ضابط أو معفي طبياً؟ سجّل وثّق هويتك للتواصل مع البائع.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(4.dp))
+            Button(
+                onClick = onNavigateToOfficer,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Gold),
+            ) {
+                Text("🎖 سجّل كضابط")
+            }
+            OutlinedButton(
+                onClick = onNavigateToMedicalExempt,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("♿ سجّل كمعفي طبي")
+            }
+            TextButton(onClick = onDismiss) { Text("إغلاق") }
+        }
     }
 }
 

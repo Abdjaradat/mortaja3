@@ -138,6 +138,7 @@ class AddCarViewModel @Inject constructor(
                         expectedPrice = price.toIntOrNull(),
                         phoneNumber = phoneNumber.trim().takeIf { it.isNotBlank() },
                         listingType = "OWNED",
+                        listingCategory = "MORTAJA3",
                         governorate = governorate,
                         notes = description.trim().takeIf { it.isNotBlank() },
                     )

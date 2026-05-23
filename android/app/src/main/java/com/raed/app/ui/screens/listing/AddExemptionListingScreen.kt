@@ -123,6 +123,7 @@ class AddExemptionViewModel @Inject constructor(
                         expectedPrice = price.toIntOrNull(),
                         phoneNumber = phoneNumber.trim().takeIf { it.isNotBlank() },
                         listingType = "SEEKING",
+                        listingCategory = "EXEMPTION_RIGHT",
                         governorate = governorate,
                         notes = notes.trim().takeIf { it.isNotBlank() },
                     )

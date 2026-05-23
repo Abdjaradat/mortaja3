@@ -30,4 +30,6 @@
     <string name="messages">الرسائل</string>
     <string name="listings">الإعلانات</string>
     <string name="requests">الطلبات</string>
+    <string name="exemptions">إعفاءات</string>
+    <string name="clearance">تخليص جمركي</string>
 </resources>

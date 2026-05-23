@@ -28,7 +28,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.ListingDto
-import com.raed.app.data.mock.FilterType
 import com.raed.app.data.mock.GOVERNORATES
 import com.raed.app.data.mock.toJod
 import com.raed.app.ui.components.AdBanner
@@ -48,7 +47,7 @@ class ListingsViewModel @Inject constructor(
     private val api: RaedApi,
 ) : ViewModel() {
 
-    var typeFilter by mutableStateOf(FilterType.ALL)
+    var categoryFilter by mutableStateOf<String?>(null)
     var governorateFilter by mutableStateOf<String?>(null)
     var searchQuery by mutableStateOf("")
 
@@ -59,7 +58,11 @@ class ListingsViewModel @Inject constructor(
     var error by mutableStateOf<String?>(null)
         private set
 
-    init { load() }
+    fun setCategory(cat: String?) {
+        if (categoryFilter == cat && listings.isNotEmpty()) return
+        categoryFilter = cat
+        load()
+    }
 
     fun load() {
         viewModelScope.launch {
@@ -68,11 +71,7 @@ class ListingsViewModel @Inject constructor(
             runCatching {
                 api.getListings(
                     governorate = governorateFilter,
-                    type = when (typeFilter) {
-                        FilterType.CARS -> "OWNED"
-                        FilterType.EXEMPTIONS -> "SEEKING"
-                        FilterType.ALL -> null
-                    },
+                    category = categoryFilter,
                     limit = 50,
                 )
             }
@@ -84,19 +83,19 @@ class ListingsViewModel @Inject constructor(
             isLoading = false
         }
     }
-
-    fun applyFilters() = load()
 }
 
 @Composable
 fun ListingsContent(
-    onCarClick: (id: String) -> Unit,
-    onExemptionClick: (id: String) -> Unit,
+    category: String,
+    onListingClick: (id: String) -> Unit,
     onCalcClick: (price: Int) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
-    viewModel: ListingsViewModel = hiltViewModel(),
+    viewModel: ListingsViewModel = hiltViewModel(key = "listings_$category"),
 ) {
+    LaunchedEffect(category) { viewModel.setCategory(category) }
+
     val feed = viewModel.listings
         .filter { viewModel.searchQuery.isBlank() || it.makeModel.contains(viewModel.searchQuery) || it.governorate.contains(viewModel.searchQuery) || (it.notes?.contains(viewModel.searchQuery) == true) }
 
@@ -104,7 +103,7 @@ fun ListingsContent(
         OutlinedTextField(
             value = viewModel.searchQuery,
             onValueChange = { viewModel.searchQuery = it },
-            placeholder = { Text("ابحث عن سيارة أو إعفاء...") },
+            placeholder = { Text("ابحث...") },
             leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,23 +119,12 @@ fun ListingsContent(
                 .padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FilterType.entries.forEach { type ->
-                FilterChip(
-                    selected = viewModel.typeFilter == type && viewModel.governorateFilter == null,
-                    onClick = {
-                        viewModel.typeFilter = type
-                        viewModel.governorateFilter = null
-                        viewModel.applyFilters()
-                    },
-                    label = { Text("${type.emoji} ${type.label}", style = MaterialTheme.typography.bodySmall) },
-                )
-            }
             GOVERNORATES.take(5).forEach { gov ->
                 FilterChip(
                     selected = viewModel.governorateFilter == gov,
                     onClick = {
                         viewModel.governorateFilter = if (viewModel.governorateFilter == gov) null else gov
-                        viewModel.applyFilters()
+                        viewModel.load()
                     },
                     label = { Text(gov, style = MaterialTheme.typography.bodySmall) },
                 )
@@ -201,16 +189,16 @@ fun ListingsContent(
                             item(key = "ad_$index") { AdBanner() }
                         }
                         item(key = listing.id) {
-                            if (listing.isOwned) {
-                                CarListingCard(
-                                    listing = listing,
-                                    onClick = { onCarClick(listing.id) },
-                                )
-                            } else {
+                            if (listing.isExemptionRight) {
                                 ExemptionListingCard(
                                     listing = listing,
-                                    onClick = { onExemptionClick(listing.id) },
+                                    onClick = { onListingClick(listing.id) },
                                     onCalcClick = { onCalcClick(listing.expectedPrice ?: 0) },
+                                )
+                            } else {
+                                CarListingCard(
+                                    listing = listing,
+                                    onClick = { onListingClick(listing.id) },
                                 )
                             }
                         }

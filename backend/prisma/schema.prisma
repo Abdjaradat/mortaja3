@@ -36,6 +36,9 @@ model User {
   adWatchLogs       AdWatchLog[]
   buyerRequests     BuyerRequest[]
   bids              Bid[]
+  clearanceAgent        ClearanceAgent?
+  clearanceRequests     ClearanceRequest[]
+  medicalExemptProfile  MedicalExemptProfile?
 }
 
 model OfficerProfile {
@@ -53,32 +56,36 @@ model OfficerProfile {
 }
 
 model Listing {
-  id            String         @id @default(cuid())
-  officerId     String
-  vehicleType   String
-  makeModel     String
-  yearMin       Int?
-  yearMax       Int?
-  color         String?
-  mileageKm     Int?
-  fuelType      String?
-  transmission  String?
-  phoneNumber   String?
-  marketPrice   Int?
-  expectedPrice Int?
-  listingType   ListingType
-  governorate   String
-  notes         String?
-  photos        String[]
-  tier          ListingTier    @default(FREE)
-  tierExpiresAt DateTime?
-  status        ListingStatus  @default(ACTIVE)
-  viewCount     Int            @default(0)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  expiresAt     DateTime?
-  officer       User           @relation(fields: [officerId], references: [id])
-  savedBy       SavedListing[]
+  id                String          @id @default(cuid())
+  officerId         String
+  vehicleType       String
+  makeModel         String
+  yearMin           Int?
+  yearMax           Int?
+  color             String?
+  mileageKm         Int?
+  fuelType          String?
+  transmission      String?
+  phoneNumber       String?
+  marketPrice       Int?
+  expectedPrice     Int?
+  listingType       ListingType
+  listingCategory   ListingCategory @default(MORTAJA3)
+  sellerType        String?
+  restrictionEndsAt DateTime?
+  originalPrice     Int?
+  governorate       String
+  notes             String?
+  photos            String[]
+  tier              ListingTier     @default(FREE)
+  tierExpiresAt     DateTime?
+  status            ListingStatus   @default(ACTIVE)
+  viewCount         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  expiresAt         DateTime?
+  officer           User            @relation(fields: [officerId], references: [id])
+  savedBy           SavedListing[]
 }
 
 model SavedListing {
@@ -154,6 +161,7 @@ model AdWatchLog {
 enum UserType {
   OFFICER
   BUYER
+  MEDICAL_EXEMPT
   ADMIN
 }
 
@@ -173,6 +181,10 @@ enum TxReason {
   BOOST_LISTING
   RENEW_LISTING
   PURCHASE
+  REGISTER_CLEARANCE_AGENT
+  CLEARANCE_OFFER
+  CLEARANCE_SELECT
+  CLEARANCE_RATE_BONUS
 }
 
 enum OfficerStatus {
@@ -189,6 +201,12 @@ enum VerificationState {
 enum ListingType {
   SEEKING
   OWNED
+}
+
+enum ListingCategory {
+  MORTAJA3
+  REGULAR
+  EXEMPTION_RIGHT
 }
 
 enum ListingTier {
@@ -238,4 +256,73 @@ enum RequestStatus {
   OPEN
   CLOSED
   EXPIRED
+}
+
+enum ClearanceLocation {
+  BOHRET_AMMAN
+  ZARQA
+}
+
+enum ClearanceStatus {
+  OPEN
+  CLOSED
+  EXPIRED
+}
+
+model MedicalExemptProfile {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  user              User              @relation(fields: [userId], references: [id])
+  documentUrl       String
+  verificationState VerificationState @default(PENDING)
+  verifiedAt        DateTime?
+  exemptionUsed     Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+}
+
+model ClearanceAgent {
+  id              String            @id @default(cuid())
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id])
+  displayName     String
+  photoUrl        String?
+  location        ClearanceLocation
+  specializations String[]
+  yearsExperience Int               @default(0)
+  bio             String?
+  isVerified      Boolean           @default(false)
+  totalDeals      Int               @default(0)
+  avgRating       Float             @default(0)
+  ratingCount     Int               @default(0)
+  createdAt       DateTime          @default(now())
+  offers          ClearanceOffer[]
+}
+
+model ClearanceRequest {
+  id          String            @id @default(cuid())
+  customerId  String
+  customer    User              @relation(fields: [customerId], references: [id])
+  serviceType String
+  location    ClearanceLocation
+  description String
+  budgetMax   Int?
+  status      ClearanceStatus   @default(OPEN)
+  isRated     Boolean           @default(false)
+  expiresAt   DateTime
+  createdAt   DateTime          @default(now())
+  offers      ClearanceOffer[]
+}
+
+model ClearanceOffer {
+  id        String           @id @default(cuid())
+  requestId String
+  request   ClearanceRequest @relation(fields: [requestId], references: [id])
+  agentId   String
+  agent     ClearanceAgent   @relation(fields: [agentId], references: [id])
+  price     Int
+  notes     String?
+  isSelected Boolean         @default(false)
+  placedAt  DateTime         @default(now())
+
+  @@unique([requestId, agentId])
 }

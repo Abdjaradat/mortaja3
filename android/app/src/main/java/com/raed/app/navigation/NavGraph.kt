@@ -10,7 +10,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.raed.app.ui.screens.*
+import com.raed.app.ui.screens.MedicalExemptRegistrationScreen
 import com.raed.app.ui.screens.auth.*
+import com.raed.app.ui.screens.clearance.*
 import com.raed.app.ui.screens.listing.*
 import com.raed.app.ui.screens.token.TokenWalletScreen
 
@@ -44,6 +46,15 @@ sealed class Screen(val route: String) {
     object PostRequest : Screen("post-request")
     object Bid : Screen("bid/{requestId}") {
         fun createRoute(id: String) = "bid/$id"
+    }
+    object PostClearanceRequest : Screen("clearance/post-request")
+    object ClearanceRequestDetail : Screen("clearance/request/{requestId}") {
+        fun createRoute(id: String) = "clearance/request/$id"
+    }
+    object RegisterAgent : Screen("clearance/register-agent")
+    object MedicalExemptRegistration : Screen("medical-exempt-registration")
+    object AgentProfile : Screen("clearance/agent/{agentId}") {
+        fun createRoute(id: String) = "clearance/agent/$id"
     }
 }
 
@@ -146,6 +157,12 @@ fun RaedNavGraph(navController: NavHostController = rememberNavController()) {
                 onNavigateToConversation = { id, name ->
                     navController.navigate(Screen.Conversation.createRoute(id, name))
                 },
+                onNavigateToOfficerVerification = {
+                    navController.navigate(Screen.OfficerVerification.route)
+                },
+                onNavigateToMedicalExempt = {
+                    navController.navigate(Screen.MedicalExemptRegistration.route)
+                },
             )
         }
 
@@ -220,6 +237,41 @@ fun RaedNavGraph(navController: NavHostController = rememberNavController()) {
             arguments = listOf(navArgument("requestId") { type = NavType.StringType }),
         ) {
             BidScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.PostClearanceRequest.route) {
+            PostClearanceRequestScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(
+            route = Screen.ClearanceRequestDetail.route,
+            arguments = listOf(navArgument("requestId") { type = NavType.StringType }),
+        ) {
+            ClearanceRequestDetailScreen(
+                onBack = { navController.popBackStack() },
+                onAgentClick = { id -> navController.navigate(Screen.AgentProfile.createRoute(id)) },
+            )
+        }
+
+        composable(Screen.RegisterAgent.route) {
+            RegisterAgentScreen(
+                onBack = { navController.popBackStack() },
+                onRegistered = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = Screen.AgentProfile.route,
+            arguments = listOf(navArgument("agentId") { type = NavType.StringType }),
+        ) {
+            AgentProfileScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.MedicalExemptRegistration.route) {
+            MedicalExemptRegistrationScreen(
+                onBack = { navController.popBackStack() },
+                onSuccess = { navController.popBackStack() },
+            )
         }
     }
 }

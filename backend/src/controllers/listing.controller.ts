@@ -3,7 +3,7 @@ import { z } from "zod";
 import prisma from "../utils/prisma.js";
 import { applyTokens } from "../utils/tokens.js";
 import type { AuthenticatedRequest } from "../middleware/auth.js";
-import { ListingType, ListingStatus, TxReason, Prisma } from "@prisma/client";
+import { ListingType, ListingCategory, ListingStatus, TxReason, Prisma } from "@prisma/client";
 
 const createListingSchema = z.object({
   vehicleType: z.enum(["SEDAN", "SUV", "HYBRID", "EV", "OTHER"]),
@@ -18,13 +18,17 @@ const createListingSchema = z.object({
   marketPrice: z.number().int().positive().optional(),
   expectedPrice: z.number().int().positive().optional(),
   listingType: z.nativeEnum(ListingType),
+  listingCategory: z.nativeEnum(ListingCategory).optional(),
+  sellerType: z.string().optional(),
+  restrictionEndsAt: z.string().datetime().optional(),
+  originalPrice: z.number().int().positive().optional(),
   governorate: z.string().min(1),
   notes: z.string().max(1000).optional(),
   photos: z.array(z.string().url()).max(10).optional(),
 });
 
 export async function getListings(req: Request, res: Response): Promise<void> {
-  const { governorate, type, minPrice, maxPrice, sort, page = "1", limit = "20" } = req.query as Record<string, string>;
+  const { governorate, type, category, minPrice, maxPrice, sort, page = "1", limit = "20" } = req.query as Record<string, string>;
 
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
@@ -34,6 +38,7 @@ export async function getListings(req: Request, res: Response): Promise<void> {
     status: ListingStatus.ACTIVE,
     ...(governorate ? { governorate } : {}),
     ...(type ? { listingType: type as ListingType } : {}),
+    ...(category ? { listingCategory: category as ListingCategory } : {}),
     ...(minPrice || maxPrice
       ? {
           expectedPrice: {
@@ -48,6 +53,7 @@ export async function getListings(req: Request, res: Response): Promise<void> {
   const conditions: Prisma.Sql[] = [Prisma.sql`l.status = 'ACTIVE'::"ListingStatus"`];
   if (governorate) conditions.push(Prisma.sql`l.governorate = ${governorate}`);
   if (type)        conditions.push(Prisma.sql`l."listingType" = ${type}::"ListingType"`);
+  if (category)    conditions.push(Prisma.sql`l."listingCategory" = ${category}::"ListingCategory"`);
   if (minPrice)    conditions.push(Prisma.sql`l."expectedPrice" >= ${parseInt(minPrice)}`);
   if (maxPrice)    conditions.push(Prisma.sql`l."expectedPrice" <= ${parseInt(maxPrice)}`);
   const whereClause = Prisma.join(conditions, " AND ");
@@ -72,6 +78,10 @@ export async function getListings(req: Request, res: Response): Promise<void> {
       l."marketPrice",
       l."expectedPrice",
       l."listingType",
+      l."listingCategory"::text AS "listingCategory",
+      l."sellerType",
+      l."restrictionEndsAt",
+      l."originalPrice",
       l.tier::text          AS tier,
       l."tierExpiresAt",
       l.governorate,
@@ -149,33 +159,58 @@ export async function getListingById(req: Request, res: Response): Promise<void>
 }
 
 export async function createListing(req: AuthenticatedRequest, res: Response): Promise<void> {
-  const profile = await prisma.officerProfile.findUnique({
-    where: { userId: req.user!.userId },
-  });
-
-  if (!profile || profile.verificationState !== "VERIFIED") {
-    res.status(403).json({ error: "Officer must be verified to post listings" });
-    return;
-  }
-
-  if (profile.exemptionUsed) {
-    res.status(400).json({ error: "Exemption has already been used" });
-    return;
-  }
-
   const parsed = createListingSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.flatten() });
     return;
   }
 
-  const listing = await prisma.listing.create({
-    data: { ...parsed.data, officerId: req.user!.userId },
+  const category = parsed.data.listingCategory ?? ListingCategory.MORTAJA3;
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.userId },
+    include: {
+      officerProfile: true,
+      medicalExemptProfile: true,
+    },
   });
 
-  const txReason = parsed.data.listingType === ListingType.OWNED
-    ? TxReason.POST_LISTING
-    : TxReason.POST_EXEMPTION;
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  const officerVerified = user.officerProfile?.verificationState === "VERIFIED";
+  const medicalVerified = user.medicalExemptProfile?.verificationState === "VERIFIED";
+
+  if (category === ListingCategory.MORTAJA3) {
+    if (!officerVerified && !medicalVerified) {
+      res.status(403).json({ error: "Must be a verified officer or medical exempt to post Mortaja3 listings" });
+      return;
+    }
+  } else {
+    // EXEMPTION_RIGHT and REGULAR require officer verification
+    if (!officerVerified) {
+      res.status(403).json({ error: "Officer must be verified to post listings" });
+      return;
+    }
+    if (category === ListingCategory.EXEMPTION_RIGHT && user.officerProfile?.exemptionUsed) {
+      res.status(400).json({ error: "Exemption has already been used" });
+      return;
+    }
+  }
+
+  const sellerType = parsed.data.sellerType ??
+    (user.officerProfile ? "OFFICER" : user.medicalExemptProfile ? "MEDICAL_EXEMPT" : undefined);
+
+  const listing = await prisma.listing.create({
+    data: {
+      ...parsed.data,
+      listingCategory: category,
+      sellerType,
+      officerId: req.user!.userId,
+    },
+  });
+
+  const txReason = category === ListingCategory.EXEMPTION_RIGHT
+    ? TxReason.POST_EXEMPTION
+    : TxReason.POST_LISTING;
 
   try {
     await applyTokens(req.user!.userId, txReason, listing.id);
@@ -285,12 +320,29 @@ export async function revealContact(req: AuthenticatedRequest, res: Response): P
 
   const listing = await prisma.listing.findUnique({
     where: { id },
-    select: { phoneNumber: true, status: true },
+    select: { phoneNumber: true, status: true, listingCategory: true },
   });
 
   if (!listing || listing.status === ListingStatus.REMOVED) {
     res.status(404).json({ error: "Listing not found" });
     return;
+  }
+
+  if (listing.listingCategory === ListingCategory.MORTAJA3) {
+    const buyer = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+      include: {
+        officerProfile: { select: { verificationState: true } },
+        medicalExemptProfile: { select: { verificationState: true } },
+      },
+    });
+    const isAllowed =
+      buyer?.officerProfile?.verificationState === "VERIFIED" ||
+      buyer?.medicalExemptProfile?.verificationState === "VERIFIED";
+    if (!isAllowed) {
+      res.status(403).json({ error: "MORTAJA3_RESTRICTED" });
+      return;
+    }
   }
 
   if (!listing.phoneNumber) {
