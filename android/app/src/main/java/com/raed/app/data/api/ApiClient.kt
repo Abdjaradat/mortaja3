@@ -1,6 +1,6 @@
 package com.raed.app.data.api
 
-import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.raed.app.BuildConfig
 import com.raed.app.data.local.SessionDataStore
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
@@ -9,6 +9,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 
 private val json = Json {
@@ -18,7 +19,7 @@ private val json = Json {
 
 fun buildRaedApi(baseUrl: String, sessionDataStore: SessionDataStore): RaedApi {
     val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
     }
 
     val client = OkHttpClient.Builder()
@@ -39,7 +40,7 @@ fun buildRaedApi(baseUrl: String, sessionDataStore: SessionDataStore): RaedApi {
         .build()
 
     return Retrofit.Builder()
-        .baseUrl("$baseUrl/api/v1/")
+        .baseUrl(baseUrl)
         .client(client)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()

@@ -22,16 +22,16 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
-
-        // Override in local.properties: API_BASE_URL=https://your-server.com
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000\"")
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/v1/\"")
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", "\"https://raed-backend.railway.app/api/v1/\"")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "API_BASE_URL", "\"https://api.raed.app\"")
         }
     }
 
