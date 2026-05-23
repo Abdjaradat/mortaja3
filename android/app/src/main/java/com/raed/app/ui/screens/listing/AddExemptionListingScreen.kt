@@ -30,7 +30,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.CreateListingRequest
-import com.raed.app.data.api.models.SpendTokenRequest
 import com.raed.app.data.mock.*
 import com.raed.app.ui.components.TokenGateBottomSheet
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
@@ -90,25 +89,11 @@ class AddExemptionViewModel @Inject constructor(
             errorMessage = null
             try {
                 val balResp = api.getTokenBalance()
-                if (!balResp.isSuccessful) {
-                    errorMessage = "فشل التحقق من الرصيد"
-                    isPublishing = false
-                    return@launch
+                if (balResp.isSuccessful) {
+                    val bal = balResp.body()!!.tokenBalance
+                    tokenBalance = bal
+                    if (bal < 30) { showTokenGate = true; return@launch }
                 }
-                val bal = balResp.body()!!.tokenBalance
-                tokenBalance = bal
-                if (bal < 30) {
-                    showTokenGate = true
-                    isPublishing = false
-                    return@launch
-                }
-                val spendResp = api.spendTokens(SpendTokenRequest(reason = "POST_EXEMPTION"))
-                if (!spendResp.isSuccessful) {
-                    errorMessage = "فشل خصم التوكنز"
-                    isPublishing = false
-                    return@launch
-                }
-                tokenBalance = spendResp.body()!!.balanceAfter
                 val vehicleTypeApi = when (vehicleCategory) {
                     "SUV" -> "SUV"
                     "هايبرد", "HYBRID" -> "HYBRID"
@@ -128,12 +113,11 @@ class AddExemptionViewModel @Inject constructor(
                         notes = notes.trim().takeIf { it.isNotBlank() },
                     )
                 )
-                if (!listingResp.isSuccessful) {
-                    errorMessage = "فشل نشر الإعلان على السيرفر"
-                    isPublishing = false
-                    return@launch
+                when {
+                    listingResp.code() == 402 -> { refreshBalance(); showTokenGate = true }
+                    listingResp.isSuccessful  -> publishSuccess = true
+                    else -> errorMessage = "فشل نشر الإعلان على السيرفر"
                 }
-                publishSuccess = true
             } catch (e: Exception) {
                 errorMessage = e.localizedMessage ?: "خطأ غير متوقع"
             } finally {

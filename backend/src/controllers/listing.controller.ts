@@ -305,13 +305,13 @@ export async function revealContact(req: AuthenticatedRequest, res: Response): P
   }
 
   if (!listing.phoneNumber) {
-    res.status(404).json({ error: "No phone number available" });
+    res.json({ phoneNumber: "غير متوفر", charged: false });
     return;
   }
 
   try {
     await applyTokens(req.user!.userId, TxReason.REVEAL_CONTACT, id);
-    res.json({ phoneNumber: listing.phoneNumber });
+    res.json({ phoneNumber: listing.phoneNumber, charged: true });
   } catch (err: unknown) {
     if (err instanceof Error && err.message.startsWith("INSUFFICIENT_TOKENS")) {
       const current = err.message.split(":")[1];

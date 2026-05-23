@@ -120,4 +120,5 @@ data class OfficerProfileStatusDto(
 @Serializable
 data class RevealContactResponse(
     @SerialName("phoneNumber") val phoneNumber: String,
+    @SerialName("charged") val charged: Boolean = true,
 )

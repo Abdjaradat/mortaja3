@@ -111,8 +111,9 @@ class ListingDetailViewModel @Inject constructor(
             runCatching { api.revealContact(listingId) }
                 .onSuccess { r ->
                     if (r.isSuccessful) {
-                        revealedPhone = r.body()!!.phoneNumber
-                        tokenBalance -= 20
+                        val body = r.body()!!
+                        revealedPhone = body.phoneNumber
+                        if (body.charged) tokenBalance -= 20
                     } else if (r.code() == 402) {
                         tokenGateRequired = 20
                         showTokenGate = true
