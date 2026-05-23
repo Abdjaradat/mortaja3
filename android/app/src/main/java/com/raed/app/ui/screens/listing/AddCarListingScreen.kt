@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.data.api.RaedApi
@@ -51,7 +52,10 @@ private val Gold = Color(0xFFC9A961)
 @HiltViewModel
 class AddCarViewModel @Inject constructor(
     private val api: RaedApi,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    val listingCategory: String = savedStateHandle["category"] ?: "MORTAJA3"
 
     // Step 1
     var make by mutableStateOf("")
@@ -138,7 +142,7 @@ class AddCarViewModel @Inject constructor(
                         expectedPrice = price.toIntOrNull(),
                         phoneNumber = phoneNumber.trim().takeIf { it.isNotBlank() },
                         listingType = "OWNED",
-                        listingCategory = "MORTAJA3",
+                        listingCategory = listingCategory,
                         governorate = governorate,
                         notes = description.trim().takeIf { it.isNotBlank() },
                     )
@@ -185,7 +189,7 @@ fun AddCarListingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("إضافة سيارة") },
+                title = { Text(if (viewModel.listingCategory == "REGULAR") "سيارة عادية للبيع" else "إضافة سيارة") },
                 navigationIcon = {
                     IconButton(onClick = { if (viewModel.currentStep > 1) viewModel.prevStep() else onBack() }) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "رجوع")

@@ -99,18 +99,6 @@ data class CreateListingRequest(
 )
 
 @Serializable
-data class MedicalExemptProfileStatusDto(
-    @SerialName("verificationState") val verificationState: String,
-    @SerialName("exemptionUsed") val exemptionUsed: Boolean = false,
-    @SerialName("verifiedAt") val verifiedAt: String? = null,
-)
-
-@Serializable
-data class MedicalExemptProfileRequest(
-    @SerialName("documentUrl") val documentUrl: String,
-)
-
-@Serializable
 data class SavedResponse(
     @SerialName("saved") val saved: Boolean,
 )

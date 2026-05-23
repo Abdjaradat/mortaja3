@@ -40,7 +40,10 @@ sealed class Screen(val route: String) {
     object OfficerVerification : Screen("officer-verification")
     object TokenWallet : Screen("token-wallet")
     object AddListingType : Screen("add-listing/type")
-    object AddCarListing : Screen("add-listing/car")
+    object AddCarListing : Screen("add-listing/car") {
+        const val ROUTE_WITH_CATEGORY = "add-listing/car?category={category}"
+        fun createRoute(category: String = "MORTAJA3") = "add-listing/car?category=$category"
+    }
     object AddExemptionListing : Screen("add-listing/exemption")
     object PostRequest : Screen("post-request")
     object Bid : Screen("bid/{requestId}") {
@@ -51,7 +54,6 @@ sealed class Screen(val route: String) {
         fun createRoute(id: String) = "clearance/request/$id"
     }
     object RegisterAgent : Screen("clearance/register-agent")
-    object MedicalExemptRegistration : Screen("medical-exempt-registration")
     object AgentProfile : Screen("clearance/agent/{agentId}") {
         fun createRoute(id: String) = "clearance/agent/$id"
     }
@@ -191,13 +193,23 @@ fun RaedNavGraph(navController: NavHostController = rememberNavController()) {
         composable(Screen.AddListingType.route) {
             AddListingTypeScreen(
                 onBack = { navController.popBackStack() },
-                onAddCar = { navController.navigate(Screen.AddCarListing.route) },
+                onAddCar = { navController.navigate(Screen.AddCarListing.createRoute("MORTAJA3")) },
+                onAddRegularCar = { navController.navigate(Screen.AddCarListing.createRoute("REGULAR")) },
                 onAddExemption = { navController.navigate(Screen.AddExemptionListing.route) },
                 onPostRequest = { navController.navigate(Screen.PostRequest.route) },
             )
         }
 
-        composable(Screen.AddCarListing.route) {
+        composable(
+            route = Screen.AddCarListing.ROUTE_WITH_CATEGORY,
+            arguments = listOf(
+                navArgument("category") {
+                    type = NavType.StringType
+                    defaultValue = "MORTAJA3"
+                    nullable = false
+                },
+            ),
+        ) {
             AddCarListingScreen(
                 onBack = { navController.popBackStack() },
                 onSuccess = {
@@ -260,11 +272,5 @@ fun RaedNavGraph(navController: NavHostController = rememberNavController()) {
             AgentProfileScreen(onBack = { navController.popBackStack() })
         }
 
-        composable(Screen.MedicalExemptRegistration.route) {
-            MedicalExemptRegistrationScreen(
-                onBack = { navController.popBackStack() },
-                onSuccess = { navController.popBackStack() },
-            )
-        }
     }
 }

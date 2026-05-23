@@ -32,12 +32,6 @@ interface RaedApi {
     @GET("users/me/officer-profile/status")
     suspend fun getOfficerProfileStatus(): Response<OfficerProfileStatusDto>
 
-    @POST("users/me/medical-exempt-profile")
-    suspend fun submitMedicalExemptProfile(@Body request: MedicalExemptProfileRequest): Response<MedicalExemptProfileStatusDto>
-
-    @GET("users/me/medical-exempt-profile/status")
-    suspend fun getMedicalExemptProfileStatus(): Response<MedicalExemptProfileStatusDto>
-
     // Listings
     @GET("listings")
     suspend fun getListings(
@@ -149,11 +143,8 @@ data class MeResponse(
     val totalTokensSpent: Int = 0,
     val referralCode: String? = null,
     val officerProfile: OfficerProfileInfo? = null,
-    val medicalExemptProfile: MedicalExemptProfileInfo? = null,
 ) {
-    val isExemptVerified get() =
-        officerProfile?.verificationState == "VERIFIED" ||
-        medicalExemptProfile?.verificationState == "VERIFIED"
+    val isExemptVerified get() = officerProfile?.verificationState == "VERIFIED"
 }
 
 @kotlinx.serialization.Serializable
@@ -164,9 +155,3 @@ data class OfficerProfileInfo(
     val exemptionUsed: Boolean = false,
 )
 
-@kotlinx.serialization.Serializable
-data class MedicalExemptProfileInfo(
-    val verificationState: String,
-    val exemptionUsed: Boolean = false,
-    val verifiedAt: String? = null,
-)

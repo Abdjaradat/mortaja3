@@ -20,6 +20,7 @@ private val Green = Color(0xFF2E7D32)
 fun AddListingTypeScreen(
     onBack: () -> Unit,
     onAddCar: () -> Unit,
+    onAddRegularCar: () -> Unit,
     onAddExemption: () -> Unit,
     onPostRequest: () -> Unit,
 ) {
@@ -56,6 +57,14 @@ fun AddListingTypeScreen(
                 badge = "50 🪙",
                 badgeColor = Gold,
                 onClick = onAddCar,
+            )
+            ListingTypeCard(
+                emoji = "🚙",
+                title = "سيارة عادية للبيع",
+                subtitle = "انشر أي سيارة — معفية أو عادية",
+                badge = "50 🪙",
+                badgeColor = Gold,
+                onClick = onAddRegularCar,
             )
             ListingTypeCard(
                 emoji = "🎖",

@@ -169,14 +169,11 @@ export async function createListing(req: AuthenticatedRequest, res: Response): P
 
   const userProfiles = await prisma.user.findUnique({
     where: { id: req.user!.userId },
-    select: {
-      officerProfile: { select: { id: true } },
-      medicalExemptProfile: { select: { id: true } },
-    },
+    select: { officerProfile: { select: { id: true } } },
   });
 
   const sellerType = parsed.data.sellerType ??
-    (userProfiles?.officerProfile ? "OFFICER" : userProfiles?.medicalExemptProfile ? "MEDICAL_EXEMPT" : undefined);
+    (userProfiles?.officerProfile ? "OFFICER" : undefined);
 
   const listing = await prisma.listing.create({
     data: {
