@@ -36,8 +36,8 @@ export async function sendPushNotification(
   try {
     await admin.messaging().send({
       token: fcmToken,
-      notification: { title, body },
-      ...(data ? { data } : {}),
+      // data-only — no notification block so onMessageReceived fires in all app states
+      data: { title, body, ...(data ?? {}) },
       android: { priority: "high" },
     });
   } catch (error) {

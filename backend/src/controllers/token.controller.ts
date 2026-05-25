@@ -3,6 +3,7 @@ import prisma from "../utils/prisma.js";
 import { applyTokens, AD_WATCH_DAILY_LIMIT } from "../utils/tokens.js";
 import { TxReason } from "@prisma/client";
 import type { AuthenticatedRequest } from "../middleware/auth.js";
+import { sendPushNotification } from "../utils/firebase.js";
 
 export async function getTokenBalance(req: AuthenticatedRequest, res: Response): Promise<void> {
   const userId = req.user!.userId;
@@ -45,6 +46,19 @@ export async function watchAd(req: AuthenticatedRequest, res: Response): Promise
     applyTokens(userId, TxReason.AD_WATCH),
     prisma.adWatchLog.create({ data: { userId, tokensEarned: 10 } }),
   ]);
+
+  prisma.user.findUnique({ where: { id: userId }, select: { fcmToken: true } })
+    .then((user) => {
+      if (user?.fcmToken) {
+        sendPushNotification(
+          user.fcmToken,
+          "🪙 +10 توكن!",
+          `تمت إضافة 10 توكن لرصيدك. رصيدك الآن: ${balanceAfter} توكن`,
+          { type: "TOKENS_EARNED", amount: "10" },
+        ).catch(() => {});
+      }
+    })
+    .catch(() => {});
 
   res.json({ tokensEarned: 10, balanceAfter, todayCount: todayCount + 1 });
 }

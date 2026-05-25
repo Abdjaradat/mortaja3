@@ -33,34 +33,38 @@ class RaedMessagingService : FirebaseMessagingService() {
                 if (accessToken != null) {
                     api.updateFcmToken(FcmTokenRequest(token = token))
                 }
-            } catch (_: Exception) {
-                // Silently fail — will retry on next token refresh
-            }
+            } catch (_: Exception) {}
         }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        val title = message.notification?.title ?: message.data["title"] ?: return
-        val body = message.notification?.body ?: message.data["body"] ?: return
-        val type = message.data["type"] ?: "NEW_MESSAGE"
+        val data = message.data
+        // Backend sends data-only messages so onMessageReceived fires in all app states.
+        // Fallback to notification block covers any legacy messages.
+        val title = data["title"] ?: message.notification?.title ?: return
+        val body  = data["body"]  ?: message.notification?.body  ?: return
+        val type  = data["type"] ?: "NEW_MESSAGE"
 
-        val channelId = if (type == "NEW_MESSAGE") {
-            RaedApplication.CHANNEL_MESSAGES
-        } else {
-            RaedApplication.CHANNEL_VERIFICATION
+        val channelId = when (type) {
+            "NEW_MESSAGE" -> RaedApplication.CHANNEL_MESSAGES
+            "VERIFICATION_APPROVED", "VERIFICATION_REJECTED" -> RaedApplication.CHANNEL_VERIFICATION
+            else -> RaedApplication.CHANNEL_GENERAL
         }
 
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            if (type == "NEW_MESSAGE") {
-                putExtra("conversationId", message.data["conversationId"])
-            }
+            putExtra("type", type)
+            data["conversationId"]?.let { putExtra("conversationId", it) }
+            data["requestId"]?.let { putExtra("requestId", it) }
+            data["listingId"]?.let { putExtra("listingId", it) }
         }
 
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this,
+            System.currentTimeMillis().toInt(),
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
@@ -74,7 +78,7 @@ class RaedMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .build()
 
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        getSystemService(NotificationManager::class.java)
+            .notify(System.currentTimeMillis().toInt(), notification)
     }
 }

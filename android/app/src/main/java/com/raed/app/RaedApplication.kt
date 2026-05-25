@@ -38,11 +38,20 @@ class RaedApplication : Application() {
                     NotificationManager.IMPORTANCE_HIGH,
                 ).apply { description = "تحديثات حالة التوثيق" }
             )
+
+            manager.createNotificationChannel(
+                NotificationChannel(
+                    CHANNEL_GENERAL,
+                    "عام",
+                    NotificationManager.IMPORTANCE_DEFAULT,
+                ).apply { description = "إشعارات عامة — توكن وعروض" }
+            )
         }
     }
 
     companion object {
         const val CHANNEL_MESSAGES = "messages"
         const val CHANNEL_VERIFICATION = "verification"
+        const val CHANNEL_GENERAL = "general"
     }
 }

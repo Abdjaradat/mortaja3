@@ -4,6 +4,7 @@ import prisma from "../utils/prisma.js";
 import { applyTokens } from "../utils/tokens.js";
 import type { AuthenticatedRequest } from "../middleware/auth.js";
 import { RequestStatus } from "@prisma/client";
+import { sendPushNotification } from "../utils/firebase.js";
 
 const createRequestSchema = z.object({
   vehicleType: z.enum(["SEDAN", "SUV", "HYBRID", "EV", "OTHER"]),
@@ -180,6 +181,20 @@ export async function placeBid(req: AuthenticatedRequest, res: Response): Promis
         select: bidSelect,
       });
     });
+
+    // Fire-and-forget: notify buyer of new bid
+    prisma.user.findUnique({ where: { id: request.buyerId }, select: { fcmToken: true } })
+      .then((buyer) => {
+        if (buyer?.fcmToken) {
+          sendPushNotification(
+            buyer.fcmToken,
+            "عرض جديد على طلبك 🎯",
+            `تلقيت عرضاً جديداً بقيمة ${tokens} توكن. ادخل لمشاهدة التفاصيل.`,
+            { type: "NEW_BID", requestId: id },
+          ).catch(() => {});
+        }
+      })
+      .catch(() => {});
 
     res.status(201).json(bid);
   } catch (err: unknown) {

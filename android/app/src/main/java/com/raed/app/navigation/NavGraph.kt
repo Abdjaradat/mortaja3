@@ -2,6 +2,7 @@ package com.raed.app.navigation
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -14,6 +15,7 @@ import com.raed.app.ui.screens.auth.*
 import com.raed.app.ui.screens.clearance.*
 import com.raed.app.ui.screens.listing.*
 import com.raed.app.ui.screens.token.TokenWalletScreen
+import kotlinx.coroutines.flow.first
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -59,8 +61,27 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun RaedNavGraph(navController: NavHostController = rememberNavController()) {
+fun RaedNavGraph(
+    navController: NavHostController = rememberNavController(),
+    pendingRoute: String? = null,
+    onPendingRouteConsumed: () -> Unit = {},
+) {
     val authViewModel: AuthViewModel = hiltViewModel()
+
+    // Deep-link from notification tap: wait until user is past auth screens, then navigate
+    LaunchedEffect(pendingRoute) {
+        if (pendingRoute == null) return@LaunchedEffect
+        navController.currentBackStackEntryFlow
+            .first { entry ->
+                val r = entry.destination.route ?: return@first false
+                r != Screen.Splash.route
+                    && r != Screen.Login.route
+                    && r != Screen.UserType.route
+                    && r != Screen.ProfileSetup.route
+            }
+        navController.navigate(pendingRoute)
+        onPendingRouteConsumed()
+    }
 
     NavHost(navController = navController, startDestination = Screen.Splash.route) {
 
