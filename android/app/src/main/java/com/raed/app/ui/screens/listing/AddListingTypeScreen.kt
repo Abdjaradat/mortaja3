@@ -8,12 +8,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.raed.app.data.api.RaedApi
+import com.raed.app.ui.components.AdEarnCard
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 private val Gold = Color(0xFFC9A961)
 private val Green = Color(0xFF2E7D32)
+
+@HiltViewModel
+class AddListingTypeViewModel @Inject constructor(
+    private val api: RaedApi,
+) : ViewModel() {
+    fun watchAd() {
+        viewModelScope.launch { runCatching { api.watchAd() } }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,6 +41,7 @@ fun AddListingTypeScreen(
     onAddRegularCar: () -> Unit,
     onAddExemption: () -> Unit,
     onPostRequest: () -> Unit,
+    viewModel: AddListingTypeViewModel = hiltViewModel(),
 ) {
     Scaffold(
         topBar = {
@@ -50,6 +69,10 @@ fun AddListingTypeScreen(
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(8.dp))
+            AdEarnCard(
+                onAdWatched = { viewModel.watchAd() },
+                label = "شاهد إعلاناً لتوفير 10 توكن 🪙",
+            )
             ListingTypeCard(
                 emoji = "🚗",
                 title = "أضف سيارة للبيع",

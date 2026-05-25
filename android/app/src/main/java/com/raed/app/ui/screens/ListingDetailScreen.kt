@@ -30,7 +30,7 @@ import com.raed.app.data.api.models.ListingDto
 import com.raed.app.data.api.models.StartConversationRequest
 import com.raed.app.data.mock.toJod
 import com.raed.app.ui.components.TokenGateBottomSheet
-import com.raed.app.ui.components.AdBanner
+import com.raed.app.ui.components.AdEarnCard
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
 import com.raed.app.utils.toTimeAgo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -155,6 +155,13 @@ class ListingDetailViewModel @Inject constructor(
         }
     }
 
+    fun watchAd() {
+        viewModelScope.launch {
+            runCatching { api.watchAd() }
+                .onSuccess { r -> if (r.isSuccessful) tokenBalance += r.body()?.tokensEarned ?: 10 }
+        }
+    }
+
     fun dismissTokenGate() { showTokenGate = false }
     fun dismissPhone() { revealedPhone = null }
     fun clearSnackbar() { snackbarMessage = null }
@@ -235,11 +242,16 @@ fun ListingDetailScreen(
                 if (listing.isExemptionRight) {
                     ExemptionDetailContent(
                         listing = listing,
-                        modifier = Modifier.padding(padding),
                         onCalcClick = { onNavigateToCalculator(listing.expectedPrice ?: 0) },
+                        onWatchAd = { viewModel.watchAd() },
+                        modifier = Modifier.padding(padding),
                     )
                 } else {
-                    CarDetailContent(listing = listing, modifier = Modifier.padding(padding))
+                    CarDetailContent(
+                        listing = listing,
+                        onWatchAd = { viewModel.watchAd() },
+                        modifier = Modifier.padding(padding),
+                    )
                 }
             }
         }
@@ -277,7 +289,7 @@ fun ListingDetailScreen(
 }
 
 @Composable
-private fun CarDetailContent(listing: ListingDto, modifier: Modifier = Modifier) {
+private fun CarDetailContent(listing: ListingDto, onWatchAd: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Box(
             modifier = Modifier.fillMaxWidth().height(220.dp).background(Color(0xFFE3F2FD)),
@@ -345,7 +357,7 @@ private fun CarDetailContent(listing: ListingDto, modifier: Modifier = Modifier)
                 }
             }
 
-            AdBanner()
+            AdEarnCard(onAdWatched = onWatchAd)
             Spacer(Modifier.height(80.dp))
         }
     }
@@ -354,8 +366,9 @@ private fun CarDetailContent(listing: ListingDto, modifier: Modifier = Modifier)
 @Composable
 private fun ExemptionDetailContent(
     listing: ListingDto,
-    modifier: Modifier = Modifier,
     onCalcClick: () -> Unit,
+    onWatchAd: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Box(
@@ -403,7 +416,7 @@ private fun ExemptionDetailContent(
                 Text("احسب الربح من هذا الإعلان 🧮", fontWeight = FontWeight.SemiBold)
             }
 
-            AdBanner()
+            AdEarnCard(onAdWatched = onWatchAd)
             Spacer(Modifier.height(80.dp))
         }
     }

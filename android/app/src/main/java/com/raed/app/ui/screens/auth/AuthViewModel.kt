@@ -52,7 +52,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun confirmUserType(userType: String) {
+    private var pendingOfficerStatus: String? = null
+
+    fun confirmUserType(userType: String, officerStatus: String? = null) {
+        pendingOfficerStatus = officerStatus
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             handleResult(authRepository.exchangeToken(userType = userType))
@@ -63,7 +66,13 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             try {
-                val response = api.updateMe(UpdateProfileRequest(fullName = fullName, governorate = governorate))
+                val response = api.updateMe(
+                    UpdateProfileRequest(
+                        fullName = fullName,
+                        governorate = governorate,
+                        officerStatus = pendingOfficerStatus,
+                    )
+                )
                 _uiState.value = if (response.isSuccessful) AuthUiState.Authenticated
                 else AuthUiState.Error("فشل حفظ الملف الشخصي")
             } catch (e: Exception) {

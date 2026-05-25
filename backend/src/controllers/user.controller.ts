@@ -9,6 +9,7 @@ const updateProfileSchema = z.object({
   governorate: z.string().optional(),
   photoUrl: z.string().url().optional(),
   phoneNumber: z.string().max(20).optional(),
+  officerStatus: z.enum(["ACTIVE", "RETIRED"]).optional(),
 });
 
 const officerProfileSchema = z.object({

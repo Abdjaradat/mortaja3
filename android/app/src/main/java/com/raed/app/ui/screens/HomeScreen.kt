@@ -184,7 +184,6 @@ fun HomeScreen(
                 modifier = Modifier.padding(padding),
             )
             4 -> ProfileContent(
-                onNavigateToOfficerVerification = { navController.navigate(Screen.OfficerVerification.route) },
                 onLoggedOut = {
                     authViewModel.resetToIdle()
                     navController.navigate(Screen.Login.route) {

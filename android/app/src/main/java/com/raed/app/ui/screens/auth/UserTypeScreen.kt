@@ -1,14 +1,14 @@
 package com.raed.app.ui.screens.auth
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.raed.app.R
 
 @Composable
 fun UserTypeScreen(
@@ -29,6 +29,7 @@ fun UserTypeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -48,63 +49,53 @@ fun UserTypeScreen(
             textAlign = TextAlign.Center,
         )
 
-        Spacer(modifier = Modifier.height(40.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-        Card(
-            onClick = { viewModel.confirmUserType("OFFICER") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-            ),
+        UserTypeCard(
+            title = "ضابط عامل",
+            subtitle = "أنا في الخدمة الفعلية ولديّ حق إعفاء",
+            emoji = "🎖",
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
             enabled = uiState !is AuthUiState.Loading,
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.user_type_officer),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "لديّ حق إعفاء ضريبي وأريد الاستفادة منه",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
+            onClick = { viewModel.confirmUserType("OFFICER", "ACTIVE") },
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        Card(
+        UserTypeCard(
+            title = "ضابط متقاعد",
+            subtitle = "أنا متقاعد ولديّ حق إعفاء غير مستخدم",
+            emoji = "🪖",
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            enabled = uiState !is AuthUiState.Loading,
+            onClick = { viewModel.confirmUserType("OFFICER", "RETIRED") },
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        UserTypeCard(
+            title = "معفي طبي",
+            subtitle = "لديّ وثيقة إعاقة وأريد الاستفادة من الإعفاء",
+            emoji = "♿",
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            enabled = uiState !is AuthUiState.Loading,
+            onClick = { viewModel.confirmUserType("MEDICAL_EXEMPT") },
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        UserTypeCard(
+            title = "مشتري",
+            subtitle = "أريد شراء سيارة بسعر مميّز عبر ضابط",
+            emoji = "🚗",
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            enabled = uiState !is AuthUiState.Loading,
             onClick = { viewModel.confirmUserType("BUYER") },
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            ),
-            enabled = uiState !is AuthUiState.Loading,
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.user_type_buyer),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "أريد شراء سيارة بسعر مميّز عبر ضابط",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
+        )
 
         if (uiState is AuthUiState.Loading) {
             Spacer(modifier = Modifier.height(24.dp))
@@ -119,6 +110,44 @@ fun UserTypeScreen(
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center,
             )
+        }
+    }
+}
+
+@Composable
+private fun UserTypeCard(
+    title: String,
+    subtitle: String,
+    emoji: String,
+    containerColor: androidx.compose.ui.graphics.Color,
+    contentColor: androidx.compose.ui.graphics.Color,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        enabled = enabled,
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(emoji, style = MaterialTheme.typography.headlineMedium)
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = contentColor,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = contentColor.copy(alpha = 0.8f),
+                )
+            }
         }
     }
 }

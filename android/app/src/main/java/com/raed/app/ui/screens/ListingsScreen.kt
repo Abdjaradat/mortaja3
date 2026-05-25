@@ -30,7 +30,7 @@ import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.ListingDto
 import com.raed.app.data.mock.GOVERNORATES
 import com.raed.app.data.mock.toJod
-import com.raed.app.ui.components.AdBanner
+import com.raed.app.ui.components.AdEarnCard
 import com.raed.app.utils.toTimeAgo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -62,6 +62,10 @@ class ListingsViewModel @Inject constructor(
         if (categoryFilter == cat && listings.isNotEmpty()) return
         categoryFilter = cat
         load()
+    }
+
+    fun watchAd() {
+        viewModelScope.launch { runCatching { api.watchAd() } }
     }
 
     fun load() {
@@ -186,7 +190,9 @@ fun ListingsContent(
                 ) {
                     feed.forEachIndexed { index, listing ->
                         if (index > 0 && index % 5 == 0) {
-                            item(key = "ad_$index") { AdBanner() }
+                            item(key = "ad_$index") {
+                                AdEarnCard(onAdWatched = { viewModel.watchAd() })
+                            }
                         }
                         item(key = listing.id) {
                             if (listing.isExemptionRight) {

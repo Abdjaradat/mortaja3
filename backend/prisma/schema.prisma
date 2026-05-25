@@ -24,6 +24,7 @@ model User {
   totalTokensEarned Int                @default(500)
   totalTokensSpent  Int                @default(0)
   referralCode      String             @unique
+  officerStatus     String?
   referredBy        String?
   conversations1    Conversation[]     @relation("user1")
   conversations2    Conversation[]     @relation("user2")

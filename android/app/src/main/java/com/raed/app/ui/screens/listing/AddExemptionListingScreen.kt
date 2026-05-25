@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.CreateListingRequest
 import com.raed.app.data.mock.*
@@ -35,6 +38,7 @@ import com.raed.app.ui.components.TokenGateBottomSheet
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,6 +64,8 @@ class AddExemptionViewModel @Inject constructor(
     var phoneNumber by mutableStateOf("")
     val selectedMediaUris = mutableStateListOf<android.net.Uri>()
 
+    var isUploadingPhotos by mutableStateOf(false)
+        private set
     var isPublishing by mutableStateOf(false)
         private set
     var publishSuccess by mutableStateOf(false)
@@ -94,6 +100,12 @@ class AddExemptionViewModel @Inject constructor(
                     tokenBalance = bal
                     if (bal < 30) { showTokenGate = true; return@launch }
                 }
+
+                val photoUrls = if (selectedMediaUris.isNotEmpty()) {
+                    isUploadingPhotos = true
+                    uploadPhotos(selectedMediaUris.toList()).also { isUploadingPhotos = false }
+                } else emptyList()
+
                 val vehicleTypeApi = when (vehicleCategory) {
                     "SUV" -> "SUV"
                     "هايبرد", "HYBRID" -> "HYBRID"
@@ -111,6 +123,7 @@ class AddExemptionViewModel @Inject constructor(
                         listingCategory = "EXEMPTION_RIGHT",
                         governorate = governorate,
                         notes = notes.trim().takeIf { it.isNotBlank() },
+                        photos = photoUrls,
                     )
                 )
                 when {
@@ -119,10 +132,21 @@ class AddExemptionViewModel @Inject constructor(
                     else -> errorMessage = "فشل نشر الإعلان على السيرفر"
                 }
             } catch (e: Exception) {
+                isUploadingPhotos = false
                 errorMessage = e.localizedMessage ?: "خطأ غير متوقع"
             } finally {
                 isPublishing = false
             }
+        }
+    }
+
+    private suspend fun uploadPhotos(uris: List<android.net.Uri>): List<String> {
+        val userId = Firebase.auth.currentUser?.uid ?: return emptyList()
+        val timestamp = System.currentTimeMillis()
+        return uris.mapIndexed { index, uri ->
+            val ref = Firebase.storage.reference.child("listings/$userId/${timestamp}_$index")
+            ref.putFile(uri).await()
+            ref.downloadUrl.await().toString()
         }
     }
 }
@@ -421,14 +445,20 @@ fun AddExemptionListingScreen(
             Spacer(Modifier.height(4.dp))
             Button(
                 onClick = { viewModel.publish() },
-                enabled = viewModel.isValid() && !viewModel.isPublishing,
+                enabled = viewModel.isValid() && !viewModel.isPublishing && !viewModel.isUploadingPhotos,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC9A961)),
             ) {
-                if (viewModel.isPublishing) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                } else {
-                    Text("انشر — 30 🪙", fontWeight = FontWeight.Bold)
+                when {
+                    viewModel.isUploadingPhotos -> {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(Modifier.width(8.dp))
+                        Text("جاري رفع الصور...", fontWeight = FontWeight.Bold)
+                    }
+                    viewModel.isPublishing -> {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                    else -> Text("انشر — 30 🪙", fontWeight = FontWeight.Bold)
                 }
             }
             Spacer(Modifier.height(16.dp))

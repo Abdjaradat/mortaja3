@@ -1,5 +1,5 @@
 FROM node:20-alpine AS builder
-# Cache bust: 2026-05-25b
+# Cache bust: 2026-05-25c
 WORKDIR /app
 COPY backend/package*.json ./
 COPY backend/prisma ./prisma/

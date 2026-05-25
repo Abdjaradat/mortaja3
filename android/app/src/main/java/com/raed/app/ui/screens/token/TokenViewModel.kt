@@ -47,7 +47,7 @@ class TokenViewModel @Inject constructor(
                         balance = body.tokenBalance,
                         totalEarned = body.totalTokensEarned,
                         totalSpent = body.totalTokensSpent,
-                        referralCode = body.referralCode,
+                        referralCode = body.referralCode ?: "",
                         transactions = body.transactions,
                         isLoading = false,
                     )

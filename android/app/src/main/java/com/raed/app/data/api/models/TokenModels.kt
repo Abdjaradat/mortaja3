@@ -18,7 +18,7 @@ data class TokenBalanceResponse(
     @SerialName("tokenBalance") val tokenBalance: Int,
     @SerialName("totalTokensEarned") val totalTokensEarned: Int,
     @SerialName("totalTokensSpent") val totalTokensSpent: Int,
-    @SerialName("referralCode") val referralCode: String,
+    @SerialName("referralCode") val referralCode: String?,
     @SerialName("transactions") val transactions: List<TokenTransactionDto>,
 )
 

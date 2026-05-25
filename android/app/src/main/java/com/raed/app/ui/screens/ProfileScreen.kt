@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -102,7 +102,6 @@ private val JORDANIAN_GOVERNORATES = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
-    onNavigateToOfficerVerification: () -> Unit,
     onLoggedOut: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -214,48 +213,6 @@ fun ProfileContent(
                         )
                     } else {
                         Text(stringResource(R.string.save))
-                    }
-                }
-
-                // Officer-specific section
-                if (profile?.userType == "OFFICER") {
-                    HorizontalDivider()
-                    val verState = profile?.officerProfile?.verificationState
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = when (verState) {
-                                "VERIFIED" -> MaterialTheme.colorScheme.primaryContainer
-                                "REJECTED" -> MaterialTheme.colorScheme.errorContainer
-                                else -> MaterialTheme.colorScheme.secondaryContainer
-                            }
-                        ),
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            Text(
-                                text = "حالة التوثيق: " + when (verState) {
-                                    "VERIFIED" -> stringResource(R.string.verified)
-                                    "PENDING" -> stringResource(R.string.pending_verification)
-                                    "REJECTED" -> "مرفوض"
-                                    else -> "لم يُقدَّم بعد"
-                                },
-                                style = MaterialTheme.typography.titleSmall,
-                            )
-
-                            if (verState == null || verState == "REJECTED") {
-                                OutlinedButton(
-                                    onClick = onNavigateToOfficerVerification,
-                                    modifier = Modifier.fillMaxWidth(),
-                                ) {
-                                    Icon(Icons.Outlined.Shield, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(8.dp))
-                                    Text("تقديم طلب التوثيق")
-                                }
-                            }
-                        }
                     }
                 }
 

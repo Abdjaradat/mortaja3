@@ -37,7 +37,6 @@ sealed class Screen(val route: String) {
         const val ROUTE_WITH_NAME = "conversation/{conversationId}?name={name}"
         fun createRoute(id: String, name: String = "") = "conversation/$id?name=${Uri.encode(name)}"
     }
-    object OfficerVerification : Screen("officer-verification")
     object TokenWallet : Screen("token-wallet")
     object AddListingType : Screen("add-listing/type")
     object AddCarListing : Screen("add-listing/car") {
@@ -176,13 +175,6 @@ fun RaedNavGraph(navController: NavHostController = rememberNavController()) {
             ConversationScreen(
                 otherUserName = name,
                 onBack = { navController.popBackStack() },
-            )
-        }
-
-        composable(Screen.OfficerVerification.route) {
-            OfficerVerificationScreen(
-                onBack = { navController.popBackStack() },
-                onSuccess = { navController.popBackStack() },
             )
         }
 
