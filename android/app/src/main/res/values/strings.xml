@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mortaja3</string>
+    <string name="app_name">مرتجع</string>
     <string name="disclaimer_welcome">رائد منصة تعارف بين الأطراف فقط. نحن لا نشتري أو نبيع المركبات، ولسنا طرفًا في أي اتفاق. جميع المعاملات مسؤولية المستخدمين.</string>
     <string name="disclaimer_listing">بنشرك هذا الإعلان، تقرّ بأنك تمتلك حق الإعفاء وأنك لم تستخدمه سابقًا. أي تصريح كاذب مسؤوليتك القانونية الشخصية.</string>
     <string name="disclaimer_chat">ينصح باستشارة محامٍ قبل توقيع أي عقد. للاطلاع على نموذج عقد مراجَع من محامٍ، افتح قسم الموارد.</string>

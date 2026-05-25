@@ -31,50 +31,109 @@ export async function verifyOtp(req: Request, res: Response): Promise<void> {
   const firebaseUid = decoded.uid;
   const email = decoded.email ?? null;
 
-  let user = await prisma.user.findUnique({ where: { firebaseUid } });
-  const isNewUser = !user;
+  try {
+    let user = await prisma.user.findUnique({ where: { firebaseUid } });
+    let isNewUser = !user;
 
-  if (!user) {
-    if (!userType) {
-      res.status(400).json({ error: "userType required for first registration" });
+    if (!user) {
+      // Check if email already exists — happens when user registered with email/password
+      // and now signs in with Google using the same email (different firebaseUid).
+      if (email) {
+        const byEmail = await prisma.user.findUnique({ where: { email } });
+        if (byEmail) {
+          // Link the new Firebase UID to the existing account and sign them in.
+          user = await prisma.user.update({
+            where: { id: byEmail.id },
+            data: { firebaseUid },
+          });
+          isNewUser = false;
+        }
+      }
+
+      if (!user) {
+        // Completely new user — client must provide userType on first call.
+        if (!userType) {
+          res.status(400).json({ error: "userType required for first registration" });
+          return;
+        }
+        user = await prisma.user.create({
+          data: { firebaseUid, email, userType, referralCode: generateReferralCode() },
+        });
+        await prisma.tokenTransaction.create({
+          data: {
+            userId: user.id,
+            type: TxType.EARN,
+            amount: 500,
+            reason: TxReason.WELCOME,
+            balanceAfter: 500,
+          },
+        });
+      }
+    } else if (email && user.email !== email) {
+      user = await prisma.user.update({
+        where: { firebaseUid },
+        data: { email },
+      });
+    }
+
+    if (user.isBlocked) {
+      res.status(403).json({ error: "Account is blocked" });
       return;
     }
-    user = await prisma.user.create({
-      data: { firebaseUid, email, userType, referralCode: generateReferralCode() },
-    });
-    await prisma.tokenTransaction.create({
-      data: {
-        userId: user.id,
-        type: TxType.EARN,
-        amount: 500,
-        reason: TxReason.WELCOME,
-        balanceAfter: 500,
+
+    const payload = buildTokenPayload(user.id, user.userType);
+
+    res.json({
+      accessToken: signAccessToken(payload),
+      refreshToken: signRefreshToken(payload),
+      user: {
+        id: user.id,
+        userType: user.userType,
+        fullName: user.fullName,
+        isNewUser,
       },
     });
-  } else if (email && user.email !== email) {
-    user = await prisma.user.update({
-      where: { firebaseUid },
-      data: { email },
-    });
+  } catch (error: unknown) {
+    // P2002 race condition: two concurrent requests tried to create the same user.
+    // Recover by finding the existing row and linking the Firebase UID.
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code: string }).code === "P2002" &&
+      email
+    ) {
+      try {
+        const byEmail = await prisma.user.findUnique({ where: { email } });
+        if (byEmail) {
+          const linked = await prisma.user.update({
+            where: { id: byEmail.id },
+            data: { firebaseUid },
+          });
+          if (linked.isBlocked) {
+            res.status(403).json({ error: "Account is blocked" });
+            return;
+          }
+          const payload = buildTokenPayload(linked.id, linked.userType);
+          res.json({
+            accessToken: signAccessToken(payload),
+            refreshToken: signRefreshToken(payload),
+            user: {
+              id: linked.id,
+              userType: linked.userType,
+              fullName: linked.fullName,
+              isNewUser: false,
+            },
+          });
+          return;
+        }
+      } catch (innerError: unknown) {
+        console.error("[ERROR] Auth P2002 recovery failed:", innerError);
+      }
+    }
+
+    console.error("[ERROR] Auth verifyOtp:", error);
+    res.status(500).json({ error: "Authentication failed" });
   }
-
-  if (user.isBlocked) {
-    res.status(403).json({ error: "Account is blocked" });
-    return;
-  }
-
-  const payload = buildTokenPayload(user.id, user.userType);
-
-  res.json({
-    accessToken: signAccessToken(payload),
-    refreshToken: signRefreshToken(payload),
-    user: {
-      id: user.id,
-      userType: user.userType,
-      fullName: user.fullName,
-      isNewUser,
-    },
-  });
 }
 
 export async function refreshToken(req: Request, res: Response): Promise<void> {
