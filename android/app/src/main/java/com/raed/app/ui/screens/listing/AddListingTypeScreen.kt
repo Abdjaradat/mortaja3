@@ -16,7 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.data.api.RaedApi
-import com.raed.app.ui.components.AdEarnCard
+import com.raed.app.ui.components.InterstitialEarnCard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -69,10 +69,7 @@ fun AddListingTypeScreen(
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(8.dp))
-            AdEarnCard(
-                onAdWatched = { viewModel.watchAd() },
-                label = "شاهد إعلاناً لتوفير 10 توكن 🪙",
-            )
+            InterstitialEarnCard(onAdWatched = { viewModel.watchAd() })
             ListingTypeCard(
                 emoji = "🚗",
                 title = "أضف سيارة للبيع",

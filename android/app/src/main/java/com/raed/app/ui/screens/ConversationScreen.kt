@@ -1,9 +1,11 @@
 package com.raed.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -11,8 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -43,6 +48,8 @@ class ConversationViewModel @Inject constructor(
         private set
     var currentUserId by mutableStateOf<String?>(null)
         private set
+    var otherUserPhotoUrl by mutableStateOf<String?>(null)
+        private set
     var isLoading by mutableStateOf(true)
         private set
     var isSending by mutableStateOf(false)
@@ -57,6 +64,14 @@ class ConversationViewModel @Inject constructor(
             currentUserId = session.userId.firstOrNull()
             runCatching { api.getMessages(conversationId) }
                 .onSuccess { r -> if (r.isSuccessful) messages = r.body()!! }
+            runCatching { api.getConversations() }
+                .onSuccess { r ->
+                    if (r.isSuccessful) {
+                        val conv = r.body()?.firstOrNull { it.id == conversationId }
+                        val other = if (conv?.user1Id == currentUserId) conv?.user2 else conv?.user1
+                        otherUserPhotoUrl = other?.photoUrl
+                    }
+                }
             isLoading = false
         }
     }
@@ -99,10 +114,36 @@ fun ConversationScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        otherUserName.ifBlank { "المحادثة" },
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier.size(36.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            val photoUrl = viewModel.otherUserPhotoUrl
+                            if (photoUrl != null) {
+                                AsyncImage(
+                                    model = photoUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            } else {
+                                Text(
+                                    otherUserName.firstOrNull()?.toString() ?: "؟",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                        }
+                        Text(
+                            otherUserName.ifBlank { "المحادثة" },
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

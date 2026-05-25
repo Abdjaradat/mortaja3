@@ -35,6 +35,7 @@ data class UpdateProfileRequest(
     @SerialName("governorate") val governorate: String? = null,
     @SerialName("phoneNumber") val phoneNumber: String? = null,
     @SerialName("officerStatus") val officerStatus: String? = null,
+    @SerialName("photoUrl") val photoUrl: String? = null,
 )
 
 @Serializable

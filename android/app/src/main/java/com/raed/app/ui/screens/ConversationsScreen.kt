@@ -1,17 +1,22 @@
 package com.raed.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -61,6 +66,11 @@ class ConversationsViewModel @Inject constructor(
         val other = if (conv.user1Id == currentUserId) conv.user2 else conv.user1
         return other?.fullName?.firstOrNull()?.toString() ?: "؟"
     }
+
+    fun otherUserPhotoUrl(conv: ConversationDto): String? {
+        val other = if (conv.user1Id == currentUserId) conv.user2 else conv.user1
+        return other?.photoUrl
+    }
 }
 
 @Composable
@@ -94,16 +104,23 @@ fun ConversationsContent(
                     items(viewModel.conversations, key = { it.id }) { conv ->
                         val name = viewModel.otherUserName(conv)
                         val initial = viewModel.otherUserInitial(conv)
+                        val photoUrl = viewModel.otherUserPhotoUrl(conv)
                         val lastMsg = conv.messages.firstOrNull()
                         ListItem(
                             modifier = Modifier.clickable { onConversationClick(conv.id, name) },
                             leadingContent = {
-                                Surface(
-                                    shape = MaterialTheme.shapes.extraLarge,
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    modifier = Modifier.size(44.dp),
+                                Box(
+                                    modifier = Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center,
                                 ) {
-                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                    if (photoUrl != null) {
+                                        AsyncImage(
+                                            model = photoUrl,
+                                            contentDescription = null,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop,
+                                        )
+                                    } else {
                                         Text(
                                             initial,
                                             style = MaterialTheme.typography.titleMedium,

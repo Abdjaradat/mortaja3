@@ -13,12 +13,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.AdSize
-import com.google.android.gms.ads.AdView
+import com.raed.app.ads.UnityAdsHelper
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
 
-private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111" // test banner
 private val Gold = Color(0xFFC9A961)
 
 object AdSessionTracker {
@@ -38,15 +35,24 @@ fun AdBanner(modifier: Modifier = Modifier) {
     ) {
         AndroidView(
             factory = { ctx ->
-                AdView(ctx).apply {
-                    setAdSize(AdSize.BANNER)
-                    adUnitId = BANNER_AD_UNIT_ID
-                    loadAd(AdRequest.Builder().build())
-                }
+                UnityAdsHelper.createBannerView(ctx as Activity).also { it.load() }
             },
             modifier = Modifier.fillMaxWidth(),
         )
     }
+}
+
+@Composable
+fun UnityBannerCard(modifier: Modifier = Modifier) {
+    val activity = LocalContext.current as? Activity ?: return
+    AndroidView(
+        factory = {
+            UnityAdsHelper.createBannerView(activity).also { it.load() }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .height(52.dp),
+    )
 }
 
 @Composable
@@ -82,6 +88,46 @@ fun AdEarnCard(
             Spacer(Modifier.width(8.dp))
             Text(
                 label,
+                style = MaterialTheme.typography.labelMedium,
+                color = Gold,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+@Composable
+fun InterstitialEarnCard(
+    onAdWatched: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (!AdSessionTracker.canShowAd()) return
+    val activity = LocalContext.current as? Activity ?: return
+
+    Card(
+        onClick = {
+            AdSessionTracker.recordAdShown()
+            UnityAdsHelper.showInterstitial(
+                activity = activity,
+                onComplete = { onAdWatched() },
+                onFailed = { AdSessionTracker.undoLastRecord() },
+            )
+        },
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Gold.copy(alpha = 0.08f)),
+        border = BorderStroke(1.dp, Gold.copy(alpha = 0.35f)),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("▶", fontSize = 13.sp, color = Gold)
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "شاهد إعلاناً قبل النشر واكسب 10 توكن 🪙",
                 style = MaterialTheme.typography.labelMedium,
                 color = Gold,
                 fontWeight = FontWeight.SemiBold,

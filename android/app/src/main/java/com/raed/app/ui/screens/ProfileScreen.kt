@@ -1,7 +1,13 @@
 package com.raed.app.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Logout
@@ -10,13 +16,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.R
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.MeResponse
 import com.raed.app.data.api.models.UpdateProfileRequest
@@ -26,6 +39,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,6 +56,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
+
+    private val _isUploadingPhoto = MutableStateFlow(false)
+    val isUploadingPhoto: StateFlow<Boolean> = _isUploadingPhoto.asStateFlow()
 
     private val _loggedOut = MutableStateFlow(false)
     val loggedOut: StateFlow<Boolean> = _loggedOut.asStateFlow()
@@ -86,6 +103,24 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun uploadAndSavePhoto(uri: android.net.Uri) {
+        viewModelScope.launch {
+            _isUploadingPhoto.value = true
+            try {
+                val userId = Firebase.auth.currentUser?.uid ?: return@launch
+                val timestamp = System.currentTimeMillis()
+                val ref = Firebase.storage.reference.child("profiles/$userId/avatar_$timestamp.jpg")
+                ref.putFile(uri).await()
+                val url = ref.downloadUrl.await().toString()
+                val response = api.updateMe(UpdateProfileRequest(photoUrl = url))
+                if (response.isSuccessful) _profile.value = response.body()
+            } catch (_: Exception) {
+            } finally {
+                _isUploadingPhoto.value = false
+            }
+        }
+    }
+
     fun logout() {
         viewModelScope.launch {
             authRepository.clearSession()
@@ -109,6 +144,7 @@ fun ProfileContent(
     val profile by viewModel.profile.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
+    val isUploadingPhoto by viewModel.isUploadingPhoto.collectAsState()
     val loggedOut by viewModel.loggedOut.collectAsState()
 
     var fullName by remember(profile) { mutableStateOf(profile?.fullName ?: "") }
@@ -116,6 +152,10 @@ fun ProfileContent(
     var phoneNumber by remember(profile) { mutableStateOf(profile?.phoneNumber ?: "") }
     var dropdownExpanded by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> uri?.let { viewModel.uploadAndSavePhoto(it) } }
 
     LaunchedEffect(loggedOut) {
         if (loggedOut) onLoggedOut()
@@ -150,6 +190,51 @@ fun ProfileContent(
                     text = stringResource(R.string.profile),
                     style = MaterialTheme.typography.headlineSmall,
                 )
+
+                Box(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .clickable(enabled = !isUploadingPhoto) {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val photoUrl = profile?.photoUrl
+                        if (photoUrl != null && !isUploadingPhoto) {
+                            AsyncImage(
+                                model = photoUrl,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else if (isUploadingPhoto) {
+                            CircularProgressIndicator(modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
+                        } else {
+                            Text("👤", fontSize = 36.sp)
+                        }
+                    }
+                    if (!isUploadingPhoto) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .align(Alignment.BottomEnd),
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text("✎", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary)
+                            }
+                        }
+                    }
+                }
 
                 OutlinedTextField(
                     value = fullName,

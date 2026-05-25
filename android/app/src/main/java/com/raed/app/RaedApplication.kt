@@ -5,6 +5,8 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
 import com.google.android.gms.ads.MobileAds
+import com.raed.app.BuildConfig
+import com.raed.app.ads.UnityAdsHelper
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
@@ -13,6 +15,7 @@ class RaedApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         MobileAds.initialize(this)
+        UnityAdsHelper.initialize(this, testMode = BuildConfig.DEBUG)
         createNotificationChannels()
     }
 

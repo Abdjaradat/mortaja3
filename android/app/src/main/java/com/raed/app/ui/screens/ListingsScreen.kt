@@ -31,6 +31,7 @@ import com.raed.app.data.api.models.ListingDto
 import com.raed.app.data.mock.GOVERNORATES
 import com.raed.app.data.mock.toJod
 import com.raed.app.ui.components.AdEarnCard
+import com.raed.app.ui.components.UnityBannerCard
 import com.raed.app.utils.toTimeAgo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -192,6 +193,11 @@ fun ListingsContent(
                         if (index > 0 && index % 5 == 0) {
                             item(key = "ad_$index") {
                                 AdEarnCard(onAdWatched = { viewModel.watchAd() })
+                            }
+                        }
+                        if (index > 0 && index % 6 == 0) {
+                            item(key = "banner_$index") {
+                                UnityBannerCard()
                             }
                         }
                         item(key = listing.id) {

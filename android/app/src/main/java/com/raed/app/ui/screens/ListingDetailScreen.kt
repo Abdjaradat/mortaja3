@@ -26,6 +26,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raed.app.data.api.RaedApi
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.raed.app.data.api.models.ListingDto
 import com.raed.app.data.api.models.StartConversationRequest
 import com.raed.app.data.mock.toJod
@@ -340,7 +342,17 @@ private fun CarDetailContent(listing: ListingDto, onWatchAd: () -> Unit, modifie
                         modifier = Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("👤", fontSize = 20.sp)
+                        val photoUrl = listing.officer?.photoUrl
+                        if (photoUrl != null) {
+                            AsyncImage(
+                                model = photoUrl,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else {
+                            Text("👤", fontSize = 20.sp)
+                        }
                     }
                     Column {
                         Text(

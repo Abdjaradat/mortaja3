@@ -125,4 +125,7 @@ dependencies {
 
     // AdMob
     implementation(libs.play.services.ads)
+
+    // Unity Ads
+    implementation("com.unity3d.ads:unity-ads:4.9.2")
 }

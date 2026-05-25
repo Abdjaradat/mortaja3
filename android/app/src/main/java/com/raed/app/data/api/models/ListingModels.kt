@@ -58,6 +58,7 @@ data class OfficerSummaryDto(
     @SerialName("id") val id: String,
     @SerialName("fullName") val fullName: String? = null,
     @SerialName("governorate") val governorate: String? = null,
+    @SerialName("photoUrl") val photoUrl: String? = null,
     @SerialName("officerProfile") val officerProfile: OfficerProfileSummaryDto? = null,
 )
 
