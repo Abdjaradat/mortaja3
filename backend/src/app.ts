@@ -17,6 +17,8 @@ import clearanceRoutes from "./routes/clearance.routes.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     hsts: { maxAge: 31536000, includeSubDomains: true },
