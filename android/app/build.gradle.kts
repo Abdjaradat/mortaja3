@@ -120,9 +120,6 @@ dependencies {
     // Splash Screen
     implementation(libs.androidx.core.splashscreen)
 
-    // Google Sign-In
-    implementation(libs.play.services.auth)
-
     // AdMob
     implementation(libs.play.services.ads)
 

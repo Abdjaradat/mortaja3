@@ -1,11 +1,16 @@
 package com.raed.app.data.auth
 
+import android.app.Activity
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.VerifyFirebaseTokenRequest
 import com.raed.app.data.local.SessionDataStore
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,31 +29,51 @@ class AuthRepository @Inject constructor(
     private val sessionDataStore: SessionDataStore,
     private val firebaseAuth: FirebaseAuth,
 ) {
-    suspend fun signInWithEmail(email: String, password: String): AuthResult {
-        return try {
-            firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            exchangeToken(userType = null)
-        } catch (e: Exception) {
-            AuthResult.Error(e.localizedMessage ?: "فشل تسجيل الدخول")
-        }
+    fun sendPhoneOtp(
+        phoneNumber: String,
+        activity: Activity,
+        onCodeSent: (verificationId: String) -> Unit,
+        onAutoVerified: (PhoneAuthCredential) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        val options = PhoneAuthOptions.newBuilder(firebaseAuth)
+            .setPhoneNumber(phoneNumber)
+            .setTimeout(60L, TimeUnit.SECONDS)
+            .setActivity(activity)
+            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    onAutoVerified(credential)
+                }
+                override fun onVerificationFailed(e: FirebaseException) {
+                    onError(e.localizedMessage ?: "فشل إرسال رمز التحقق")
+                }
+                override fun onCodeSent(
+                    verificationId: String,
+                    token: PhoneAuthProvider.ForceResendingToken,
+                ) {
+                    onCodeSent(verificationId)
+                }
+            })
+            .build()
+        PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
-    suspend fun createAccountWithEmail(email: String, password: String): AuthResult {
+    suspend fun verifyPhoneCode(verificationId: String, code: String): AuthResult {
         return try {
-            firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-            exchangeToken(userType = null)
-        } catch (e: Exception) {
-            AuthResult.Error(e.localizedMessage ?: "فشل إنشاء الحساب")
-        }
-    }
-
-    suspend fun signInWithGoogle(googleIdToken: String): AuthResult {
-        return try {
-            val credential = GoogleAuthProvider.getCredential(googleIdToken, null)
+            val credential = PhoneAuthProvider.getCredential(verificationId, code)
             firebaseAuth.signInWithCredential(credential).await()
             exchangeToken(userType = null)
         } catch (e: Exception) {
-            AuthResult.Error(e.localizedMessage ?: "فشل تسجيل الدخول بـ Google")
+            AuthResult.Error(e.localizedMessage ?: "رمز التحقق غير صحيح")
+        }
+    }
+
+    suspend fun signInWithPhoneCredential(credential: PhoneAuthCredential): AuthResult {
+        return try {
+            firebaseAuth.signInWithCredential(credential).await()
+            exchangeToken(userType = null)
+        } catch (e: Exception) {
+            AuthResult.Error(e.localizedMessage ?: "فشل التحقق")
         }
     }
 

@@ -1,7 +1,9 @@
 package com.raed.app.ui.screens.auth
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.PhoneAuthCredential
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.UpdateProfileRequest
 import com.raed.app.data.auth.AuthRepository
@@ -16,6 +18,7 @@ import javax.inject.Inject
 sealed class AuthUiState {
     object Idle : AuthUiState()
     object Loading : AuthUiState()
+    object OtpSent : AuthUiState()
     object NeedsUserType : AuthUiState()
     data class NeedsProfile(val userType: String) : AuthUiState()
     object Authenticated : AuthUiState()
@@ -31,24 +34,34 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun signInWithEmail(email: String, password: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            handleResult(authRepository.signInWithEmail(email, password))
-        }
+    private var verificationId: String? = null
+
+    fun sendOtp(phoneNumber: String, activity: Activity) {
+        _uiState.value = AuthUiState.Loading
+        authRepository.sendPhoneOtp(
+            phoneNumber = phoneNumber,
+            activity = activity,
+            onCodeSent = { vId ->
+                verificationId = vId
+                _uiState.value = AuthUiState.OtpSent
+            },
+            onAutoVerified = { credential: PhoneAuthCredential ->
+                viewModelScope.launch { handleResult(authRepository.signInWithPhoneCredential(credential)) }
+            },
+            onError = { msg ->
+                _uiState.value = AuthUiState.Error(msg)
+            },
+        )
     }
 
-    fun createAccount(email: String, password: String) {
-        viewModelScope.launch {
-            _uiState.value = AuthUiState.Loading
-            handleResult(authRepository.createAccountWithEmail(email, password))
+    fun verifyCode(code: String) {
+        val vId = verificationId ?: run {
+            _uiState.value = AuthUiState.Error("انتهت صلاحية الجلسة — أعد إرسال الرمز")
+            return
         }
-    }
-
-    fun signInWithGoogle(googleIdToken: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
-            handleResult(authRepository.signInWithGoogle(googleIdToken))
+            handleResult(authRepository.verifyPhoneCode(vId, code))
         }
     }
 
@@ -86,6 +99,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun resetToIdle() {
+        verificationId = null
         _uiState.value = AuthUiState.Idle
     }
 
