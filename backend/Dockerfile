@@ -1,9 +1,9 @@
 FROM node:20-alpine AS builder
+# Cache bust: 2026-05-25
 WORKDIR /app
 COPY backend/package*.json ./
 COPY backend/prisma ./prisma/
-RUN npm ci
-RUN npx prisma generate
+RUN npm ci --ignore-scripts && npx prisma generate
 COPY backend/tsconfig*.json ./
 COPY backend/src ./src
 COPY backend/prisma.config.ts ./
