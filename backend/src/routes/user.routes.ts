@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getMe, updateMe, updateFcmToken, deleteMe,
   submitOfficerProfile, getOfficerProfileStatus,
+  submitMedicalExemptProfile,
 } from "../controllers/user.controller.js";
 import { requireAuth, requireUserType } from "../middleware/auth.js";
 import { UserType } from "@prisma/client";
@@ -16,5 +17,6 @@ router.patch("/me/fcm-token", updateFcmToken);
 router.delete("/me", deleteMe);
 router.post("/me/officer-profile", requireUserType(UserType.OFFICER), submitOfficerProfile);
 router.get("/me/officer-profile/status", requireUserType(UserType.OFFICER), getOfficerProfileStatus);
+router.post("/me/medical-exempt-profile", submitMedicalExemptProfile);
 
 export default router;

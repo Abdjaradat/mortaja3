@@ -32,6 +32,9 @@ interface RaedApi {
     @GET("users/me/officer-profile/status")
     suspend fun getOfficerProfileStatus(): Response<OfficerProfileStatusDto>
 
+    @POST("users/me/medical-exempt-profile")
+    suspend fun submitMedicalExemptProfile(@Body request: MedicalExemptProfileRequest): Response<OfficerProfileStatusDto>
+
     // Listings
     @GET("listings")
     suspend fun getListings(

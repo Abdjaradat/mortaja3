@@ -33,7 +33,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(keystoreProperties["storeFile"] as? String ?: "keystore/raed-release.jks")
+            storeFile = rootProject.file(keystoreProperties["storeFile"] as? String ?: "keystore/raed-release.jks")
             storePassword = keystoreProperties["storePassword"] as? String
                 ?: System.getenv("KEYSTORE_PASSWORD") ?: ""
             keyAlias = keystoreProperties["keyAlias"] as? String ?: "raed"

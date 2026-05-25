@@ -111,6 +111,11 @@ data class OfficerProfileRequest(
 )
 
 @Serializable
+data class MedicalExemptProfileRequest(
+    @SerialName("documentUrl") val documentUrl: String,
+)
+
+@Serializable
 data class OfficerProfileStatusDto(
     @SerialName("verificationState") val verificationState: String,
     @SerialName("rejectionReason") val rejectionReason: String? = null,

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import prisma from "../utils/prisma.js";
 import type { AuthenticatedRequest } from "../middleware/auth.js";
-import { OfficerStatus } from "@prisma/client";
+import { OfficerStatus, UserType } from "@prisma/client";
 
 const updateProfileSchema = z.object({
   fullName: z.string().min(2).max(100).optional(),
@@ -115,6 +115,42 @@ export async function submitOfficerProfile(req: AuthenticatedRequest, res: Respo
       documentUrl: parsed.data.documentUrl,
     },
     select: { verificationState: true, rank: true, status: true },
+  });
+
+  res.status(201).json(profile);
+}
+
+const medicalExemptSchema = z.object({
+  documentUrl: z.string().min(5),
+});
+
+export async function submitMedicalExemptProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  if (req.user!.userType !== UserType.MEDICAL_EXEMPT) {
+    res.status(403).json({ error: "Only MEDICAL_EXEMPT users can submit this profile" });
+    return;
+  }
+
+  const parsed = medicalExemptSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten() });
+    return;
+  }
+
+  const existing = await prisma.medicalExemptProfile.findUnique({
+    where: { userId: req.user!.userId },
+  });
+
+  if (existing) {
+    res.status(409).json({ error: "Medical exempt profile already submitted" });
+    return;
+  }
+
+  const profile = await prisma.medicalExemptProfile.create({
+    data: {
+      userId: req.user!.userId,
+      documentUrl: parsed.data.documentUrl,
+    },
+    select: { verificationState: true, verifiedAt: true },
   });
 
   res.status(201).json(profile);
