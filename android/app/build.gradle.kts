@@ -45,10 +45,12 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/v1/\"")
+            buildConfigField("String", "APP_DOWNLOAD_URL", "\"https://drive.google.com/YOUR_APK_LINK\"")
         }
         release {
             signingConfig = signingConfigs.getByName("release")
             buildConfigField("String", "API_BASE_URL", "\"https://mortaja3-production.up.railway.app/api/v1/\"")
+            buildConfigField("String", "APP_DOWNLOAD_URL", "\"https://play.google.com/store/apps/details?id=com.raed.app\"")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

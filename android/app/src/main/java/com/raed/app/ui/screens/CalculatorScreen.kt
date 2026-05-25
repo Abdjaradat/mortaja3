@@ -3,6 +3,7 @@ package com.raed.app.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.raed.app.ui.components.UnityBannerCard
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -87,6 +88,7 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
                 },
             )
         },
+        bottomBar = { UnityBannerCard() },
     ) { padding ->
         Column(
             modifier = Modifier

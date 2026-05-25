@@ -1,6 +1,8 @@
 package com.raed.app.ui.screens.listing
 
 import android.app.Activity
+import android.content.Context
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,10 +35,13 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import com.raed.app.data.api.RaedApi
 import com.raed.app.data.api.models.CreateListingRequest
+import com.raed.app.data.api.models.EarnShareRequest
 import com.raed.app.data.mock.*
+import com.raed.app.ui.components.ShareListingBottomSheet
 import com.raed.app.ui.components.TokenGateBottomSheet
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -53,6 +58,7 @@ import coil.compose.AsyncImage
 @HiltViewModel
 class AddExemptionViewModel @Inject constructor(
     private val api: RaedApi,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
     var posterType by mutableStateOf(PosterType.OFFICER)
@@ -70,6 +76,12 @@ class AddExemptionViewModel @Inject constructor(
         private set
     var publishSuccess by mutableStateOf(false)
         private set
+    var publishedListingTitle by mutableStateOf("")
+        private set
+    var showShareSheet by mutableStateOf(false)
+        private set
+    var shareSnackbar by mutableStateOf<String?>(null)
+        private set
     var showTokenGate by mutableStateOf(false)
         private set
     var tokenBalance by mutableIntStateOf(0)
@@ -80,7 +92,18 @@ class AddExemptionViewModel @Inject constructor(
     fun isValid() = price.isNotBlank() && price.toIntOrNull() != null
 
     fun dismissTokenGate() { showTokenGate = false }
+    fun dismissShareSheet() { showShareSheet = false }
     fun clearError() { errorMessage = null }
+    fun clearShareSnackbar() { shareSnackbar = null }
+
+    fun earnShare(platform: String) {
+        viewModelScope.launch {
+            runCatching { api.earnShare(EarnShareRequest(platform)) }
+                .onSuccess { r ->
+                    if (r.isSuccessful) shareSnackbar = "ربحت 10 توكن 🎉"
+                }
+        }
+    }
 
     fun refreshBalance() {
         viewModelScope.launch {
@@ -128,7 +151,11 @@ class AddExemptionViewModel @Inject constructor(
                 )
                 when {
                     listingResp.code() == 402 -> { refreshBalance(); showTokenGate = true }
-                    listingResp.isSuccessful  -> publishSuccess = true
+                    listingResp.isSuccessful  -> {
+                        publishedListingTitle = "$vehicleCategory ${fuelTypeForExemption.label}"
+                        publishSuccess = true
+                        showShareSheet = true
+                    }
                     else -> errorMessage = "فشل نشر الإعلان على السيرفر"
                 }
             } catch (e: Exception) {
@@ -140,14 +167,32 @@ class AddExemptionViewModel @Inject constructor(
         }
     }
 
-    private suspend fun uploadPhotos(uris: List<android.net.Uri>): List<String> {
+    private suspend fun uploadPhotos(uris: List<Uri>): List<String> {
         val userId = Firebase.auth.currentUser?.uid ?: return emptyList()
         val timestamp = System.currentTimeMillis()
         return uris.mapIndexed { index, uri ->
-            val ref = Firebase.storage.reference.child("listings/$userId/${timestamp}_$index")
-            ref.putFile(uri).await()
-            ref.downloadUrl.await().toString()
+            uploadMediaToFirebase(uri, userId, index, timestamp)
         }
+    }
+
+    private suspend fun uploadMediaToFirebase(uri: Uri, userId: String, index: Int, timestamp: Long): String {
+        val mimeType = appContext.contentResolver.getType(uri) ?: "image/jpeg"
+        val isVideo = mimeType.startsWith("video")
+        val maxBytes = if (isVideo) 50 * 1024 * 1024L else 10 * 1024 * 1024L
+        val fileSize = appContext.contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize } ?: 0L
+        if (fileSize > maxBytes) throw Exception("حجم الملف كبير جداً. الحد الأقصى للصور 10MB وللفيديو 50MB")
+
+        val extension = when {
+            isVideo -> "mp4"
+            mimeType == "image/png" -> "png"
+            mimeType == "image/webp" -> "webp"
+            else -> "jpg"
+        }
+        val ref = Firebase.storage.reference.child("listings/$userId/${timestamp}_$index.$extension")
+        val stream = appContext.contentResolver.openInputStream(uri)
+            ?: throw Exception("Cannot open URI: $uri")
+        stream.use { ref.putStream(it).await() }
+        return ref.downloadUrl.await().toString()
     }
 }
 
@@ -162,10 +207,10 @@ fun AddExemptionListingScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val activity = LocalContext.current as Activity
 
-    LaunchedEffect(viewModel.publishSuccess) {
-        if (viewModel.publishSuccess) {
-            snackbarHostState.showSnackbar("تم نشر إعلانك ✓")
-            onSuccess()
+    LaunchedEffect(viewModel.shareSnackbar) {
+        viewModel.shareSnackbar?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearShareSnackbar()
         }
     }
 
@@ -478,6 +523,20 @@ fun AddExemptionListingScreen(
             },
             onBuyTokens = { onNavigateToWallet() },
             onDismiss = { viewModel.dismissTokenGate() },
+        )
+    }
+
+    if (viewModel.showShareSheet) {
+        ShareListingBottomSheet(
+            listingTitle = viewModel.publishedListingTitle,
+            listingPrice = viewModel.price.toIntOrNull(),
+            onShare = { platform ->
+                viewModel.earnShare(platform)
+            },
+            onDismiss = {
+                viewModel.dismissShareSheet()
+                onSuccess()
+            },
         )
     }
 }

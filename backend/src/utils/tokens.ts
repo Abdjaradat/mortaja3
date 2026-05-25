@@ -4,6 +4,7 @@ import { TxReason, TxType } from "@prisma/client";
 export const TOKEN_COSTS: Record<TxReason, number> = {
   WELCOME:                    500,
   AD_WATCH:                   10,
+  LISTING_SHARE:              10,
   REFERRAL:                   100,
   POST_LISTING:               -50,
   POST_EXEMPTION:             -30,

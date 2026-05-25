@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.DriveEta
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,8 +32,11 @@ import androidx.compose.ui.layout.ContentScale
 import com.raed.app.data.api.models.ListingDto
 import com.raed.app.data.api.models.StartConversationRequest
 import com.raed.app.data.mock.toJod
+import com.raed.app.data.api.models.EarnShareRequest
 import com.raed.app.ui.components.TokenGateBottomSheet
 import com.raed.app.ui.components.AdEarnCard
+import com.raed.app.ui.components.ShareListingBottomSheet
+import com.raed.app.ui.components.UnityBannerCard
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
 import com.raed.app.utils.toTimeAgo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -164,10 +168,28 @@ class ListingDetailViewModel @Inject constructor(
         }
     }
 
+    var showShareSheet by mutableStateOf(false)
+        private set
+
     fun dismissTokenGate() { showTokenGate = false }
     fun dismissPhone() { revealedPhone = null }
     fun clearSnackbar() { snackbarMessage = null }
     fun clearStartConversation() { startConversationResult = null }
+    fun openShareSheet() { showShareSheet = true }
+    fun dismissShareSheet() { showShareSheet = false }
+
+    fun earnShare(platform: String) {
+        viewModelScope.launch {
+            runCatching { api.earnShare(EarnShareRequest(platform)) }
+                .onSuccess { r ->
+                    if (r.isSuccessful) {
+                        val earned = r.body()?.tokensEarned ?: 10
+                        tokenBalance += earned
+                        snackbarMessage = "ربحت $earned توكن 🎉"
+                    }
+                }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -208,19 +230,29 @@ fun ListingDetailScreen(
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "رجوع")
                     }
                 },
+                actions = {
+                    if (listing != null) {
+                        IconButton(onClick = { viewModel.openShareSheet() }) {
+                            Icon(Icons.Outlined.Share, contentDescription = "مشاركة")
+                        }
+                    }
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            if (listing != null) {
-                if (listing.isExemptionRight) {
-                    ExemptionBottomBar(onMessage = { viewModel.onMessageClick() })
-                } else {
-                    CarBottomBar(
-                        isSpending = viewModel.isSpending,
-                        onMessage = { viewModel.onMessageClick() },
-                        onReveal = { viewModel.revealContact() },
-                    )
+            Column {
+                UnityBannerCard()
+                if (listing != null) {
+                    if (listing.isExemptionRight) {
+                        ExemptionBottomBar(onMessage = { viewModel.onMessageClick() })
+                    } else {
+                        CarBottomBar(
+                            isSpending = viewModel.isSpending,
+                            onMessage = { viewModel.onMessageClick() },
+                            onReveal = { viewModel.revealContact() },
+                        )
+                    }
                 }
             }
         },
@@ -272,6 +304,16 @@ fun ListingDetailScreen(
             },
             onBuyTokens = { onNavigateToWallet() },
             onDismiss = { viewModel.dismissTokenGate() },
+        )
+    }
+
+    if (viewModel.showShareSheet) {
+        val l = viewModel.listing
+        ShareListingBottomSheet(
+            listingTitle = l?.makeModel ?: "إعلان",
+            listingPrice = l?.expectedPrice,
+            onShare = { platform -> viewModel.earnShare(platform) },
+            onDismiss = { viewModel.dismissShareSheet() },
         )
     }
 

@@ -63,6 +63,35 @@ export async function watchAd(req: AuthenticatedRequest, res: Response): Promise
   res.json({ tokensEarned: 10, balanceAfter, todayCount: todayCount + 1 });
 }
 
+export async function earnShare(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const userId = req.user!.userId;
+  const { platform } = req.body as { platform?: string };
+
+  const SHARE_DAILY_LIMIT = 3;
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const todayCount = await prisma.shareLog.count({
+    where: { userId, sharedAt: { gte: startOfDay } },
+  });
+
+  if (todayCount >= SHARE_DAILY_LIMIT) {
+    res.status(429).json({
+      error: "DAILY_LIMIT_REACHED",
+      message: `لقد وصلت للحد اليومي (${SHARE_DAILY_LIMIT} مشاركات)`,
+      remainingToday: 0,
+    });
+    return;
+  }
+
+  const [{ balanceAfter }] = await Promise.all([
+    applyTokens(userId, TxReason.LISTING_SHARE),
+    prisma.shareLog.create({ data: { userId, platform: platform ?? "unknown", tokensEarned: 10 } }),
+  ]);
+
+  res.json({ tokensEarned: 10, newBalance: balanceAfter, remainingToday: SHARE_DAILY_LIMIT - todayCount - 1 });
+}
+
 export async function spendTokens(req: AuthenticatedRequest, res: Response): Promise<void> {
   const { reason, relatedEntityId } = req.body as {
     reason?: string;

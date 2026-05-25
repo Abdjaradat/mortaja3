@@ -30,6 +30,18 @@ data class WatchAdResponse(
 )
 
 @Serializable
+data class EarnShareRequest(
+    @SerialName("platform") val platform: String,
+)
+
+@Serializable
+data class EarnShareResponse(
+    @SerialName("tokensEarned") val tokensEarned: Int,
+    @SerialName("newBalance") val newBalance: Int,
+    @SerialName("remainingToday") val remainingToday: Int,
+)
+
+@Serializable
 data class SpendTokenRequest(
     @SerialName("reason") val reason: String,
     @SerialName("relatedEntityId") val relatedEntityId: String? = null,

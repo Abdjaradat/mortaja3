@@ -70,6 +70,9 @@ interface RaedApi {
     @POST("tokens/watch-ad")
     suspend fun watchAd(): Response<WatchAdResponse>
 
+    @POST("tokens/earn-share")
+    suspend fun earnShare(@Body request: EarnShareRequest): Response<EarnShareResponse>
+
     @POST("tokens/spend")
     suspend fun spendTokens(@Body request: SpendTokenRequest): Response<SpendTokenResponse>
 

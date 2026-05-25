@@ -36,6 +36,7 @@ model User {
   savedListings     SavedListing[]
   tokenTransactions TokenTransaction[]
   adWatchLogs       AdWatchLog[]
+  shareLogs         ShareLog[]
   buyerRequests     BuyerRequest[]
   bids              Bid[]
   clearanceAgent        ClearanceAgent?
@@ -160,6 +161,15 @@ model AdWatchLog {
   user         User     @relation(fields: [userId], references: [id])
 }
 
+model ShareLog {
+  id           String   @id @default(cuid())
+  userId       String
+  platform     String
+  tokensEarned Int      @default(10)
+  sharedAt     DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
 enum UserType {
   OFFICER
   BUYER
@@ -175,6 +185,7 @@ enum TxType {
 enum TxReason {
   WELCOME
   AD_WATCH
+  LISTING_SHARE
   REFERRAL
   POST_LISTING
   POST_EXEMPTION

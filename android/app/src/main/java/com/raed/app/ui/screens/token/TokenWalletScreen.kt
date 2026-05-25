@@ -3,6 +3,7 @@ package com.raed.app.ui.screens.token
 import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import com.raed.app.ui.components.UnityBannerCard
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import kotlinx.coroutines.launch
@@ -72,6 +73,7 @@ fun TokenWalletScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = { UnityBannerCard() },
     ) { padding ->
         LazyColumn(
             modifier = Modifier

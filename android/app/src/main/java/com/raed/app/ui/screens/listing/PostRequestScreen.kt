@@ -3,6 +3,7 @@ package com.raed.app.ui.screens.listing
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import com.raed.app.ui.components.UnityBannerCard
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -129,6 +130,7 @@ fun PostRequestScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = { UnityBannerCard() },
     ) { padding ->
         Column(
             modifier = Modifier

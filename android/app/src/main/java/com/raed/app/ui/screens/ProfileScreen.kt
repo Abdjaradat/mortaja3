@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.raed.app.ui.components.UnityBannerCard
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -315,7 +316,9 @@ fun ProfileContent(
                     Text(stringResource(R.string.logout))
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(8.dp))
+                UnityBannerCard()
+                Spacer(Modifier.height(16.dp))
             }
         }
     }

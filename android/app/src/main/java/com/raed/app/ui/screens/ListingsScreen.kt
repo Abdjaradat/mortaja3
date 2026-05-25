@@ -168,14 +168,14 @@ fun ListingsContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text("🔍", fontSize = 48.sp)
+                        Text("📭", fontSize = 48.sp)
                         Text(
-                            "لا توجد إعلانات",
+                            "لا توجد إعلانات حالياً",
                             style = MaterialTheme.typography.titleMedium,
                             textAlign = TextAlign.Center,
                         )
                         Text(
-                            "جرّب تغيير الفلتر أو كن أول من ينشر إعلاناً!",
+                            "كن أول من ينشر!",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,

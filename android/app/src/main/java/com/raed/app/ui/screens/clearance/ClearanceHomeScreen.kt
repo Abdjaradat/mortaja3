@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.raed.app.ui.components.UnityBannerCard
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
@@ -123,6 +124,7 @@ fun ClearanceHomeContent(
                     modifier = Modifier.weight(1f),
                 )
             }
+            UnityBannerCard()
         }
     }
 }

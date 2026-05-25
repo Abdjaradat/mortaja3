@@ -8,7 +8,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Message
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -109,7 +108,7 @@ fun HomeScreen(
                 NavigationBarItem(
                     selected = selectedTab == 3,
                     onClick = { selectedTab = 3 },
-                    icon = { Icon(Icons.AutoMirrored.Outlined.Message, contentDescription = null) },
+                    icon = { Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = null) },
                     label = { Text(stringResource(R.string.messages)) },
                 )
                 // Tab 4 — الملف الشخصي
