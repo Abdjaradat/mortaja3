@@ -18,11 +18,14 @@ router.use((_req, res, next) => {
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
 const ADMIN_PASSWORD = (process.env["ADMIN_PASSWORD"] ?? "").trim();
-const SESSION_SECRET = (process.env["SESSION_SECRET"] ?? "session-secret").trim();
+const JWT_SECRET     = (process.env["JWT_SECRET"] ?? "").trim();
 const TOKEN_MAX_AGE  = 24 * 60 * 60; // 24h in seconds
 
 if (!ADMIN_PASSWORD) {
   console.error("[ADMIN] ADMIN_PASSWORD env var is not set — admin login will always fail");
+}
+if (!JWT_SECRET) {
+  console.error("[ADMIN] JWT_SECRET env var is not set — admin tokens cannot be signed");
 }
 
 // In-memory login rate-limiter (per IP)
@@ -49,12 +52,12 @@ function clearLoginAttempts(ip: string) {
 }
 
 function signAdminToken(): string {
-  return jwt.sign({ admin: true }, SESSION_SECRET, { expiresIn: TOKEN_MAX_AGE });
+  return jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: TOKEN_MAX_AGE });
 }
 
 function verifyAdminToken(token: string): boolean {
   try {
-    const payload = jwt.verify(token, SESSION_SECRET) as { admin?: boolean };
+    const payload = jwt.verify(token, JWT_SECRET) as { admin?: boolean };
     return payload.admin === true;
   } catch {
     return false;
