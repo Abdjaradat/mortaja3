@@ -8,9 +8,13 @@ const router = Router();
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
-const ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"] ?? "changeme";
-const SESSION_SECRET = process.env["SESSION_SECRET"] ?? "session-secret";
+const ADMIN_PASSWORD = (process.env["ADMIN_PASSWORD"] ?? "").trim();
+const SESSION_SECRET = (process.env["SESSION_SECRET"] ?? "session-secret").trim();
 const TOKEN_MAX_AGE  = 24 * 60 * 60; // 24h in seconds
+
+if (!ADMIN_PASSWORD) {
+  console.error("[ADMIN] ADMIN_PASSWORD env var is not set — admin login will always fail");
+}
 
 // In-memory login rate-limiter (per IP)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -406,7 +410,7 @@ router.post("/api/login", (req: Request, res: Response): void => {
     return;
   }
 
-  if (password !== ADMIN_PASSWORD) {
+  if (!ADMIN_PASSWORD || password?.trim() !== ADMIN_PASSWORD) {
     recordFailedLogin(ip);
     res.status(401).json({ error: "كلمة المرور غير صحيحة" });
     return;
