@@ -226,7 +226,7 @@ ${navbar("dashboard")}
           <th class="pb-2 text-right">النوع</th><th class="pb-2 text-right">التوكنز</th>
         </tr></thead>
         <tbody>\${users.users.map(u => \`
-          <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/admin/users/'+\${JSON.stringify(u.id)}">
+          <tr style="border-bottom:1px solid #e5e7eb;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''" onclick="window.location.href='/admin/users/'+\${JSON.stringify(u.id)}">
             <td class="py-2">\${u.fullName || '—'}</td>
             <td class="py-2 font-mono">\${u.phoneNumber || '—'}</td>
             <td class="py-2">\${u.userType}</td>
@@ -274,7 +274,7 @@ ${navbar("users")}
           <th class="pb-2 px-2">تاريخ التسجيل</th>
         </tr></thead>
         <tbody>\${d.users.map(u => \`
-          <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/admin/users/'+\${JSON.stringify(u.id)}">
+          <tr style="border-bottom:1px solid #e5e7eb;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''" onclick="window.location.href='/admin/users/'+\${JSON.stringify(u.id)}">
             <td class="py-2 px-2 font-medium">\${u.fullName || '—'}</td>
             <td class="py-2 px-2 font-mono text-xs">\${u.phoneNumber || '—'}</td>
             <td class="py-2 px-2"><span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">\${typeLabel[u.userType] || u.userType}</span></td>
@@ -301,7 +301,7 @@ router.get("/users/:id", (req, res) => {
   res.send(layout("تفاصيل المستخدم", /* html */`
 ${navbar("users")}
 <div class="max-w-4xl mx-auto px-4 py-8">
-  <a href="/admin/users" class="text-yellow-600 hover:underline text-sm mb-4 inline-block">← العودة للقائمة</a>
+  <a href="/admin/users" style="color:#d97706;text-decoration:none;font-size:0.875rem;display:inline-block;margin-bottom:1rem;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">← العودة للقائمة</a>
   <div id="content">جار التحميل...</div>
 </div>
 <script>
