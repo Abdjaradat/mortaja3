@@ -398,6 +398,17 @@ ${navbar("users")}
 
 router.get("/", (_req, res) => res.redirect("/admin/login"));
 
+// ── Diagnostics (no auth — remove after debugging) ───────────────────────────
+
+router.get("/api/diag", (_req, res) => {
+  res.json({
+    adminPasswordSet: !!process.env["ADMIN_PASSWORD"],
+    adminPasswordLength: process.env["ADMIN_PASSWORD"]?.length ?? 0,
+    sessionSecretSet: !!process.env["SESSION_SECRET"],
+    nodeEnv: process.env["NODE_ENV"],
+  });
+});
+
 // ── JSON APIs ─────────────────────────────────────────────────────────────────
 
 router.post("/api/login", (req: Request, res: Response): void => {
