@@ -45,7 +45,7 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/api/v1/\"")
-            buildConfigField("String", "APP_DOWNLOAD_URL", "\"https://drive.google.com/YOUR_APK_LINK\"")
+            buildConfigField("String", "APP_DOWNLOAD_URL", "\"https://drive.google.com/uc?export=download&id=1aASRmXTXLK66SIlqLLvjeftCADAQuppS\"")
         }
         release {
             signingConfig = signingConfigs.getByName("release")
