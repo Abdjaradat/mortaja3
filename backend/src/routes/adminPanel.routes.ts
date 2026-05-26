@@ -379,16 +379,26 @@ ${navbar("users")}
   }
 
   async function addTokens() {
-    const amountInput = document.getElementById('amount').value;
-    const reasonSel   = document.getElementById('reason').value;
-    const amount = parseInt(amountInput || (reasonSel === 'custom' ? '0' : reasonSel));
-    if (!amount || amount < 1) { alert('أدخل كمية صحيحة'); return; }
+    const amountRaw = document.getElementById('amount').value.trim();
+    const reasonSel = document.getElementById('reason').value;
+    const amount    = amountRaw ? Number(amountRaw) : (reasonSel !== 'custom' ? Number(reasonSel) : 0);
+    if (!Number.isInteger(amount) || amount < 1) { alert('أدخل كمية صحيحة (رقم صحيح أكبر من 0)'); return; }
     const reasonLabels = { '200': 'شراء حزمة 200 توكن', '600': 'شراء حزمة 600 توكن', '1500': 'شراء حزمة 1500 توكن', 'custom': 'مكافأة يدوية' };
-    const r = await apiFetch('/admin/api/users/' + userId + '/add-tokens', {
-      method: 'POST',
-      body: JSON.stringify({ amount, reason: reasonLabels[reasonSel] || reasonSel }),
-    });
-    if (!r) return;
+    const token = localStorage.getItem('adminToken');
+    let r;
+    try {
+      r = await fetch('/admin/api/users/' + userId + '/add-tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ amount: amount, reason: reasonLabels[reasonSel] || reasonSel }),
+      });
+    } catch (err) {
+      alert('خطأ في الاتصال: ' + err.message);
+      return;
+    }
     const d = await r.json();
     const el = document.getElementById('addResult');
     el.classList.remove('hidden');
@@ -398,7 +408,7 @@ ${navbar("users")}
       setTimeout(load, 1000);
     } else {
       el.className = 'mb-3 p-3 rounded-lg text-sm bg-red-50 border border-red-200 text-red-700';
-      el.textContent = d.error || 'فشلت العملية';
+      el.textContent = d.error || 'فشلت العملية (status ' + r.status + ')';
     }
   }
 
