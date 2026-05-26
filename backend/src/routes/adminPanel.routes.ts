@@ -415,9 +415,13 @@ router.post("/api/login", (req: Request, res: Response): void => {
   const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").replace("::ffff:", "");
   const { password } = req.body as { password?: string };
 
-  console.log("[ADMIN LOGIN] ADMIN_PASSWORD env:", process.env["ADMIN_PASSWORD"] ? `SET (length=${process.env["ADMIN_PASSWORD"].length})` : "NOT SET");
-  console.log("[ADMIN LOGIN] Submitted password length:", password?.length ?? 0);
-  console.log("[ADMIN LOGIN] Match:", password?.trim() === ADMIN_PASSWORD);
+  const adminPassword = process.env["ADMIN_PASSWORD"]?.trim() ?? "";
+  const submitted = (password ?? "").trim();
+  const match = submitted === adminPassword;
+
+  console.log("[ADMIN LOGIN] env length:", adminPassword.length);
+  console.log("[ADMIN LOGIN] submitted length:", submitted.length);
+  console.log("[ADMIN LOGIN] match:", match);
 
   const { allowed } = checkLoginRateLimit(ip);
   if (!allowed) {
@@ -425,7 +429,7 @@ router.post("/api/login", (req: Request, res: Response): void => {
     return;
   }
 
-  if (!ADMIN_PASSWORD || password?.trim() !== ADMIN_PASSWORD) {
+  if (!adminPassword || !match) {
     recordFailedLogin(ip);
     res.status(401).json({ error: "كلمة المرور غير صحيحة" });
     return;
