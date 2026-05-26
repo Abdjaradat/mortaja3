@@ -6,6 +6,15 @@ import { TxReason } from "@prisma/client";
 
 const router = Router();
 
+// Relax CSP for admin HTML pages — helmet's default blocks inline scripts and CDN
+router.use((_req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';"
+  );
+  next();
+});
+
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
 const ADMIN_PASSWORD = (process.env["ADMIN_PASSWORD"] ?? "").trim();
