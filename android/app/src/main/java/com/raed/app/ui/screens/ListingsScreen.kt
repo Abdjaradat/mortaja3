@@ -1,4 +1,4 @@
-﻿package com.raed.app.ui.screens
+package com.raed.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -82,9 +82,9 @@ class ListingsViewModel @Inject constructor(
             }
                 .onSuccess { r ->
                     if (r.isSuccessful) listings = r.body()!!.listings
-                    else error = "ÙØ´Ù„ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†Ø§Øª"
+                    else error = "فشل تحميل الإعلانات"
                 }
-                .onFailure { error = "ØªØ­Ù‚Ù‚ Ù…Ù† Ø§ØªØµØ§Ù„Ùƒ Ø¨Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª" }
+                .onFailure { error = "تحقق من اتصالك بالإنترنت" }
             isLoading = false
         }
     }
@@ -108,7 +108,7 @@ fun ListingsContent(
         OutlinedTextField(
             value = viewModel.searchQuery,
             onValueChange = { viewModel.searchQuery = it },
-            placeholder = { Text("Ø§Ø¨Ø­Ø«...") },
+            placeholder = { Text("ابحث...") },
             leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -138,44 +138,44 @@ fun ListingsContent(
 
         when {
             viewModel.isLoading -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
             viewModel.error != null -> {
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(32.dp),
+                    modifier = Modifier.weight(1f).padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text("âš ï¸", fontSize = 40.sp)
+                    Text("⚠️", fontSize = 40.sp)
                     Spacer(Modifier.height(12.dp))
                     Text(viewModel.error!!, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(12.dp))
                     OutlinedButton(onClick = { viewModel.load() }) {
                         Icon(Icons.Outlined.Refresh, null)
                         Spacer(Modifier.width(6.dp))
-                        Text("Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©")
+                        Text("إعادة المحاولة")
                     }
                 }
             }
             feed.isEmpty() -> {
                 Box(
-                    modifier = Modifier.fillMaxSize().padding(32.dp),
+                    modifier = Modifier.weight(1f).padding(32.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text("ðŸ“­", fontSize = 48.sp)
+                        Text("🔭", fontSize = 48.sp)
                         Text(
-                            "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¥Ø¹Ù„Ø§Ù†Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹",
+                            "لا توجد إعلانات حالياً",
                             style = MaterialTheme.typography.titleMedium,
                             textAlign = TextAlign.Center,
                         )
                         Text(
-                            "ÙƒÙ† Ø£ÙˆÙ„ Ù…Ù† ÙŠÙ†Ø´Ø±!",
+                            "كن أول من ينشر!",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -186,6 +186,7 @@ fun ListingsContent(
             else -> {
                 LazyColumn(
                     state = listState,
+                    modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -218,6 +219,8 @@ fun ListingsContent(
                 }
             }
         }
+
+        UnityBannerAd()
     }
 }
 
@@ -262,10 +265,10 @@ fun CarListingCard(listing: ListingDto, onClick: () -> Unit) {
                     )
                 }
                 val details = listOfNotNull(
-                    listing.mileageKm?.let { "%,d ÙƒÙ…".format(it) },
+                    listing.mileageKm?.let { "%,d كم".format(it) },
                     listing.fuelTypeLabel.takeIf { it.isNotEmpty() },
                     listing.transmissionLabel.takeIf { it.isNotEmpty() },
-                ).joinToString(" â€¢ ")
+                ).joinToString(" • ")
                 if (details.isNotEmpty()) {
                     Text(text = details, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -273,7 +276,7 @@ fun CarListingCard(listing: ListingDto, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text("ðŸ“ ${listing.governorate}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("📍 ${listing.governorate}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(listing.createdAt.toTimeAgo(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -303,8 +306,8 @@ fun ExemptionListingCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("ðŸŽ–", fontSize = 18.sp)
-                    Text("Ø¥Ø¹ÙØ§Ø¡ Ø¶Ø§Ø¨Ø·", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text("🎖", fontSize = 18.sp)
+                    Text("إعفاء ضابط", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (listing.isBoosted) {
@@ -312,16 +315,16 @@ fun ExemptionListingCard(
                     }
                     if (listing.isVerified) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Icon(Icons.Outlined.Verified, contentDescription = "Ù…ÙˆØ«Ù‘Ù‚", tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
-                            Text("Ù…ÙˆØ«Ù‘Ù‚", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2E7D32))
+                            Icon(Icons.Outlined.Verified, contentDescription = "موثّق", tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
+                            Text("موثّق", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2E7D32))
                         }
                     }
                 }
             }
 
-            Text("ÙŠØ¨Ø­Ø« Ø¹Ù†: ${listing.makeModel}", style = MaterialTheme.typography.bodyMedium)
+            Text("يبحث عن: ${listing.makeModel}", style = MaterialTheme.typography.bodyMedium)
             listing.expectedPrice?.let {
-                Text("Ø§Ù„Ø³Ø¹Ø±: ${it.toJod()}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = Gold)
+                Text("السعر: ${it.toJod()}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = Gold)
             }
 
             Row(
@@ -330,14 +333,14 @@ fun ExemptionListingCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("ðŸ“ ${listing.governorate}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("📍 ${listing.governorate}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(listing.createdAt.toTimeAgo(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(
                     onClick = onCalcClick,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                 ) {
-                    Text("Ø§Ø­Ø³Ø¨ Ø§Ù„Ø±Ø¨Ø­ ðŸ§®", style = MaterialTheme.typography.labelMedium, color = Gold)
+                    Text("احسب الربح 🧮", style = MaterialTheme.typography.labelMedium, color = Gold)
                 }
             }
         }
@@ -347,9 +350,9 @@ fun ExemptionListingCard(
 @Composable
 fun TierBadge(tier: String, modifier: Modifier = Modifier) {
     val (label, bg) = when (tier) {
-        "GOLD" -> "Ø°Ù‡Ø¨ÙŠ" to Color(0xFFC9A961)
+        "GOLD" -> "ذهبي" to Color(0xFFC9A961)
         "VIP" -> "VIP" to Color(0xFF7B1FA2)
-        "FEATURED" -> "Ù…Ù…ÙŠØ²" to Color(0xFFE65100)
+        "FEATURED" -> "مميز" to Color(0xFFE65100)
         else -> return
     }
     Box(
@@ -360,4 +363,3 @@ fun TierBadge(tier: String, modifier: Modifier = Modifier) {
         Text(label, color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
     }
 }
-
