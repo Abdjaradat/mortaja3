@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 import prisma from "./utils/prisma.js";
 
 import { globalLimiter } from "./middleware/rateLimiter.js";
@@ -11,6 +12,7 @@ import tokenRoutes from "./routes/token.routes.js";
 import listingRoutes from "./routes/listing.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import adminPanelRoutes from "./routes/adminPanel.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import requestRoutes from "./routes/request.routes.js";
 import clearanceRoutes from "./routes/clearance.routes.js";
@@ -33,8 +35,13 @@ app.use(
 );
 
 app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use(morgan("combined"));
 app.use(globalLimiter);
+
+// Admin panel (before API rate limiter, serves HTML + protected JSON endpoints)
+app.use("/admin", adminPanelRoutes);
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
