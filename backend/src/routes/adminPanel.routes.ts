@@ -404,6 +404,10 @@ router.post("/api/login", (req: Request, res: Response): void => {
   const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown").replace("::ffff:", "");
   const { password } = req.body as { password?: string };
 
+  console.log("[ADMIN LOGIN] ADMIN_PASSWORD env:", process.env["ADMIN_PASSWORD"] ? `SET (length=${process.env["ADMIN_PASSWORD"].length})` : "NOT SET");
+  console.log("[ADMIN LOGIN] Submitted password length:", password?.length ?? 0);
+  console.log("[ADMIN LOGIN] Match:", password?.trim() === ADMIN_PASSWORD);
+
   const { allowed } = checkLoginRateLimit(ip);
   if (!allowed) {
     res.status(429).json({ error: "تم تجاوز الحد الأقصى لمحاولات الدخول. حاول بعد ساعة." });
