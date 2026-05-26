@@ -226,7 +226,7 @@ ${navbar("dashboard")}
           <th class="pb-2 text-right">النوع</th><th class="pb-2 text-right">التوكنز</th>
         </tr></thead>
         <tbody>\${users.users.map(u => \`
-          <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="location.href='/admin/users/'+\${JSON.stringify(u.id)}">
+          <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/admin/users/'+\${JSON.stringify(u.id)}">
             <td class="py-2">\${u.fullName || '—'}</td>
             <td class="py-2 font-mono">\${u.phoneNumber || '—'}</td>
             <td class="py-2">\${u.userType}</td>
@@ -274,7 +274,7 @@ ${navbar("users")}
           <th class="pb-2 px-2">تاريخ التسجيل</th>
         </tr></thead>
         <tbody>\${d.users.map(u => \`
-          <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="location.href='/admin/users/'+\${JSON.stringify(u.id)}">
+          <tr class="border-b hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/admin/users/'+\${JSON.stringify(u.id)}">
             <td class="py-2 px-2 font-medium">\${u.fullName || '—'}</td>
             <td class="py-2 px-2 font-mono text-xs">\${u.phoneNumber || '—'}</td>
             <td class="py-2 px-2"><span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">\${typeLabel[u.userType] || u.userType}</span></td>
@@ -342,18 +342,25 @@ ${navbar("users")}
       <div class="bg-white rounded-2xl shadow p-5 mb-6">
         <h3 class="text-md font-bold text-gray-800 mb-4">➕ إضافة توكنز</h3>
         <div id="addResult" class="hidden mb-3 p-3 rounded-lg text-sm"></div>
-        <div class="flex gap-3 flex-wrap">
-          <input type="number" id="amount" placeholder="الكمية" min="1" max="10000"
-            class="border border-gray-300 rounded-lg px-3 py-2 w-28 focus:outline-none focus:ring-2 focus:ring-yellow-500"/>
-          <select id="reason" class="border border-gray-300 rounded-lg px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            <option value="200">شراء حزمة 200 توكن</option>
-            <option value="600">شراء حزمة 600 توكن</option>
-            <option value="1500">شراء حزمة 1500 توكن</option>
-            <option value="custom">مكافأة يدوية</option>
-          </select>
+        <div class="flex gap-3 flex-wrap items-end">
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-gray-500">عدد التوكنز</label>
+            <input type="number" id="tokenAmount" placeholder="مثال: 200" min="1" max="10000"
+              class="border border-gray-300 rounded-lg px-3 py-2 w-36 focus:outline-none focus:ring-2 focus:ring-yellow-500"/>
+          </div>
+          <div class="flex flex-col gap-1 flex-1">
+            <label class="text-xs text-gray-500">السبب</label>
+            <select id="tokenReason" onchange="prefillAmount(this.value)"
+              class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+              <option value="شراء حزمة 200 توكن">شراء 200 توكن — 1 د.أ</option>
+              <option value="شراء حزمة 600 توكن">شراء 600 توكن — 2.5 د.أ</option>
+              <option value="شراء حزمة 1500 توكن">شراء 1500 توكن — 5 د.أ</option>
+              <option value="مكافأة يدوية">مكافأة يدوية</option>
+            </select>
+          </div>
           <button onclick="addTokens()"
             class="px-5 py-2 bg-yellow-600 text-white rounded-lg font-bold hover:bg-yellow-700 transition-colors">
-            أضف التوكنز
+            إضافة التوكنز
           </button>
         </div>
       </div>
@@ -378,22 +385,29 @@ ${navbar("users")}
       </div>\`;
   }
 
+  const PACKAGE_AMOUNTS = { 'شراء حزمة 200 توكن': 200, 'شراء حزمة 600 توكن': 600, 'شراء حزمة 1500 توكن': 1500 };
+
+  function prefillAmount(reasonValue) {
+    const preset = PACKAGE_AMOUNTS[reasonValue];
+    if (preset) document.getElementById('tokenAmount').value = preset;
+    else document.getElementById('tokenAmount').value = '';
+  }
+
   async function addTokens() {
-    const amountRaw = document.getElementById('amount').value.trim();
-    const reasonSel = document.getElementById('reason').value;
-    const amount    = amountRaw ? Number(amountRaw) : (reasonSel !== 'custom' ? Number(reasonSel) : 0);
-    if (!Number.isInteger(amount) || amount < 1) { alert('أدخل كمية صحيحة (رقم صحيح أكبر من 0)'); return; }
-    const reasonLabels = { '200': 'شراء حزمة 200 توكن', '600': 'شراء حزمة 600 توكن', '1500': 'شراء حزمة 1500 توكن', 'custom': 'مكافأة يدوية' };
+    const amountRaw = document.getElementById('tokenAmount').value.trim();
+    const reason    = document.getElementById('tokenReason').value;
+    const amount    = Number(amountRaw);
+    if (!Number.isInteger(amount) || amount < 1 || amount > 10000) {
+      alert('أدخل كمية صحيحة (1 – 10000)');
+      return;
+    }
     const token = localStorage.getItem('adminToken');
     let r;
     try {
       r = await fetch('/admin/api/users/' + userId + '/add-tokens', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({ amount: amount, reason: reasonLabels[reasonSel] || reasonSel }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ amount: amount, reason: reason }),
       });
     } catch (err) {
       alert('خطأ في الاتصال: ' + err.message);
