@@ -8,7 +8,7 @@ fun loadAndShowRewardedAd(
     onRewarded: () -> Unit,
     onFailed: (String) -> Unit,
 ) {
-    UnityAdsHelper.showRewarded(
+    UnityAdsHelper.loadAndShowRewarded(
         activity = activity,
         onRewarded = onRewarded,
         onFailed = { onFailed("Unity rewarded ad failed") },

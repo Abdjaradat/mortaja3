@@ -1,10 +1,9 @@
 package com.raed.app.ui.components
 
-import android.app.Activity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.raed.app.ads.UnityAdsHelper
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
+import com.unity3d.services.banners.BannerView
 
 private val Gold = Color(0xFFC9A961)
 
@@ -27,32 +27,34 @@ object AdSessionTracker {
 
 @Composable
 fun AdBanner(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        AndroidView(
-            factory = { ctx ->
-                UnityAdsHelper.createBannerView(ctx as Activity).also { it.load() }
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
+    val context = LocalContext.current
+    var bannerView by remember { mutableStateOf<BannerView?>(null) }
+    LaunchedEffect(Unit) {
+        UnityAdsHelper.createBannerView(context) { banner -> bannerView = banner }
+    }
+    bannerView?.let { banner ->
+        Box(
+            modifier = modifier.fillMaxWidth().height(52.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            AndroidView(factory = { banner }, modifier = Modifier.fillMaxWidth())
+        }
     }
 }
 
 @Composable
 fun UnityBannerCard(modifier: Modifier = Modifier) {
-    val activity = LocalContext.current as? Activity ?: return
-    AndroidView(
-        factory = {
-            UnityAdsHelper.createBannerView(activity).also { it.load() }
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp),
-    )
+    val context = LocalContext.current
+    var bannerView by remember { mutableStateOf<BannerView?>(null) }
+    LaunchedEffect(Unit) {
+        UnityAdsHelper.createBannerView(context) { banner -> bannerView = banner }
+    }
+    bannerView?.let { banner ->
+        AndroidView(
+            factory = { banner },
+            modifier = modifier.fillMaxWidth().height(52.dp),
+        )
+    }
 }
 
 @Composable
@@ -62,7 +64,7 @@ fun AdEarnCard(
     modifier: Modifier = Modifier,
 ) {
     if (!AdSessionTracker.canShowAd()) return
-    val activity = LocalContext.current as? Activity ?: return
+    val activity = LocalContext.current as? android.app.Activity ?: return
 
     Card(
         onClick = {
@@ -102,7 +104,7 @@ fun InterstitialEarnCard(
     modifier: Modifier = Modifier,
 ) {
     if (!AdSessionTracker.canShowAd()) return
-    val activity = LocalContext.current as? Activity ?: return
+    val activity = LocalContext.current as? android.app.Activity ?: return
 
     Card(
         onClick = {

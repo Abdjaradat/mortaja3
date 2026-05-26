@@ -1,9 +1,9 @@
-package com.raed.app.ui.screens
+﻿package com.raed.app.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import com.raed.app.ui.components.UnityBannerCard
+import com.raed.app.ui.components.UnityBannerAd
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -21,12 +21,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
-// ── Tax rates per Decision No. 4306, June 28 2025 ──────────────────────────
+// â”€â”€ Tax rates per Decision No. 4306, June 28 2025 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 private enum class VehicleType(val label: String, val emoji: String, val taxRate: Double) {
-    GASOLINE("بنزين",    "⛽", 0.51),
-    HYBRID  ("هايبرد",   "🔵", 0.39),
-    ELECTRIC("كهربائي",  "⚡", 0.27),
+    GASOLINE("Ø¨Ù†Ø²ÙŠÙ†",    "â›½", 0.51),
+    HYBRID  ("Ù‡Ø§ÙŠØ¨Ø±Ø¯",   "ðŸ”µ", 0.39),
+    ELECTRIC("ÙƒÙ‡Ø±Ø¨Ø§Ø¦ÙŠ",  "âš¡", 0.27),
 }
 
 private data class CalcResult(
@@ -48,9 +48,9 @@ private fun calculate(
     return CalcResult(base, taxSaved, netProfit, breakEven)
 }
 
-private fun Double.jod(): String = "%,.0f د.أ".format(this)
+private fun Double.jod(): String = "%,.0f Ø¯.Ø£".format(this)
 
-// ── Colors ──────────────────────────────────────────────────────────────────
+// â”€â”€ Colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 private val GreenText    = Color(0xFF2E7D32)
 private val AmberText    = Color(0xFFF57F17)
@@ -58,7 +58,7 @@ private val GreenBg      = Color(0xFFE8F5E9)
 private val AmberBg      = Color(0xFFFFF8E1)
 private val RedBg        = Color(0xFFFFEBEE)
 
-// ── Screen ──────────────────────────────────────────────────────────────────
+// â”€â”€ Screen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,18 +77,18 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("حاسبة الإعفاء") },
+                title = { Text("Ø­Ø§Ø³Ø¨Ø© Ø§Ù„Ø¥Ø¹ÙØ§Ø¡") },
                 actions = {
                     IconButton(onClick = { showHelp = true }) {
                         Icon(
                             imageVector    = Icons.Outlined.HelpOutline,
-                            contentDescription = "مساعدة",
+                            contentDescription = "Ù…Ø³Ø§Ø¹Ø¯Ø©",
                         )
                     }
                 },
             )
         },
-        bottomBar = { UnityBannerCard() },
+        bottomBar = { UnityBannerAd() },
     ) { padding ->
         Column(
             modifier = Modifier
@@ -100,7 +100,7 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // ── Collapsible info card ────────────────────────────────────
+            // â”€â”€ Collapsible info card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             var infoExpanded by remember { mutableStateOf(false) }
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -116,7 +116,7 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
                         verticalAlignment     = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "كيف تعمل الحاسبة؟ 💡",
+                            "ÙƒÙŠÙ ØªØ¹Ù…Ù„ Ø§Ù„Ø­Ø§Ø³Ø¨Ø©ØŸ ðŸ’¡",
                             style      = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color      = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -129,11 +129,11 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
                     }
                     AnimatedVisibility(visible = infoExpanded) {
                         Text(
-                            text  = "أدخل سعر السيارة في السوق واختر نوع الوقود، وستحسب الحاسبة تلقائياً:\n" +
-                                    "- قيمة الضريبة التي وفّرها الإعفاء\n" +
-                                    "- ربحك الصافي بعد خصم ما دفعته للضابط\n" +
-                                    "- الحد الأدنى لسعر السيارة الذي يجعل الصفقة مربحة\n\n" +
-                                    "💡 نصيحة: ابحث عن سيارة يكون سعرها في السوق أعلى من 'أدنى سعر للربح'",
+                            text  = "Ø£Ø¯Ø®Ù„ Ø³Ø¹Ø± Ø§Ù„Ø³ÙŠØ§Ø±Ø© ÙÙŠ Ø§Ù„Ø³ÙˆÙ‚ ÙˆØ§Ø®ØªØ± Ù†ÙˆØ¹ Ø§Ù„ÙˆÙ‚ÙˆØ¯ØŒ ÙˆØ³ØªØ­Ø³Ø¨ Ø§Ù„Ø­Ø§Ø³Ø¨Ø© ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹:\n" +
+                                    "- Ù‚ÙŠÙ…Ø© Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„ØªÙŠ ÙˆÙÙ‘Ø±Ù‡Ø§ Ø§Ù„Ø¥Ø¹ÙØ§Ø¡\n" +
+                                    "- Ø±Ø¨Ø­Ùƒ Ø§Ù„ØµØ§ÙÙŠ Ø¨Ø¹Ø¯ Ø®ØµÙ… Ù…Ø§ Ø¯ÙØ¹ØªÙ‡ Ù„Ù„Ø¶Ø§Ø¨Ø·\n" +
+                                    "- Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¯Ù†Ù‰ Ù„Ø³Ø¹Ø± Ø§Ù„Ø³ÙŠØ§Ø±Ø© Ø§Ù„Ø°ÙŠ ÙŠØ¬Ø¹Ù„ Ø§Ù„ØµÙÙ‚Ø© Ù…Ø±Ø¨Ø­Ø©\n\n" +
+                                    "ðŸ’¡ Ù†ØµÙŠØ­Ø©: Ø§Ø¨Ø­Ø« Ø¹Ù† Ø³ÙŠØ§Ø±Ø© ÙŠÙƒÙˆÙ† Ø³Ø¹Ø±Ù‡Ø§ ÙÙŠ Ø§Ù„Ø³ÙˆÙ‚ Ø£Ø¹Ù„Ù‰ Ù…Ù† 'Ø£Ø¯Ù†Ù‰ Ø³Ø¹Ø± Ù„Ù„Ø±Ø¨Ø­'",
                             style    = MaterialTheme.typography.bodySmall,
                             color    = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
@@ -142,21 +142,21 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
                 }
             }
 
-            // ── Input: market price ──────────────────────────────────────
+            // â”€â”€ Input: market price â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             OutlinedTextField(
                 value         = marketPriceText,
                 onValueChange = { marketPriceText = it.filter { c -> c.isDigit() || c == '.' } },
-                label         = { Text("سعر السيارة في السوق") },
-                placeholder   = { Text("السعر الذي يدفعه المواطن العادي") },
-                suffix        = { Text("د.أ") },
+                label         = { Text("Ø³Ø¹Ø± Ø§Ù„Ø³ÙŠØ§Ø±Ø© ÙÙŠ Ø§Ù„Ø³ÙˆÙ‚") },
+                placeholder   = { Text("Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ø°ÙŠ ÙŠØ¯ÙØ¹Ù‡ Ø§Ù„Ù…ÙˆØ§Ø·Ù† Ø§Ù„Ø¹Ø§Ø¯ÙŠ") },
+                suffix        = { Text("Ø¯.Ø£") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true,
             )
 
-            // ── Input: vehicle type ──────────────────────────────────────
+            // â”€â”€ Input: vehicle type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Text(
-                text  = "نوع المحرك",
+                text  = "Ù†ÙˆØ¹ Ø§Ù„Ù…Ø­Ø±Ùƒ",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -179,24 +179,24 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
                 }
             }
             Text(
-                text  = "معدل الضريبة: ${(vehicleType.taxRate * 100).toInt()}%  —  قرار رقم 4306 بتاريخ 28 يونيو 2025",
+                text  = "Ù…Ø¹Ø¯Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©: ${(vehicleType.taxRate * 100).toInt()}%  â€”  Ù‚Ø±Ø§Ø± Ø±Ù‚Ù… 4306 Ø¨ØªØ§Ø±ÙŠØ® 28 ÙŠÙˆÙ†ÙŠÙˆ 2025",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
             )
 
-            // ── Input: exemption cost ────────────────────────────────────
+            // â”€â”€ Input: exemption cost â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             OutlinedTextField(
                 value         = exemptionCostText,
                 onValueChange = { exemptionCostText = it.filter { c -> c.isDigit() || c == '.' } },
-                label         = { Text("سعر شراء الإعفاء من الضابط") },
-                placeholder   = { Text("يتغير حسب السوق — كان 16,000 في 2024") },
-                suffix        = { Text("د.أ") },
+                label         = { Text("Ø³Ø¹Ø± Ø´Ø±Ø§Ø¡ Ø§Ù„Ø¥Ø¹ÙØ§Ø¡ Ù…Ù† Ø§Ù„Ø¶Ø§Ø¨Ø·") },
+                placeholder   = { Text("ÙŠØªØºÙŠØ± Ø­Ø³Ø¨ Ø§Ù„Ø³ÙˆÙ‚ â€” ÙƒØ§Ù† 16,000 ÙÙŠ 2024") },
+                suffix        = { Text("Ø¯.Ø£") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier      = Modifier.fillMaxWidth(),
                 singleLine    = true,
             )
 
-            // ── Results card ─────────────────────────────────────────────
+            // â”€â”€ Results card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             if (result != null) {
                 ResultsCard(result, exemptionCost)
                 VerdictCard(result)
@@ -207,13 +207,13 @@ fun CalculatorScreen(prefilledExemptionCost: String = "") {
         }
     }
 
-    // ── Help bottom sheet ────────────────────────────────────────────────
+    // â”€â”€ Help bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (showHelp) {
         HelpBottomSheet(onDismiss = { showHelp = false })
     }
 }
 
-// ── Results card ─────────────────────────────────────────────────────────────
+// â”€â”€ Results card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun ResultsCard(result: CalcResult, exemptionCost: Double) {
@@ -229,25 +229,25 @@ private fun ResultsCard(result: CalcResult, exemptionCost: Double) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text  = "نتائج الحساب",
+                text  = "Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ø­Ø³Ø§Ø¨",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
             HorizontalDivider()
 
             ResultRow(
-                label = "قيمة الضريبة الموفّرة",
+                label = "Ù‚ÙŠÙ…Ø© Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù…ÙˆÙÙ‘Ø±Ø©",
                 value = result.taxSaved.jod(),
             )
             ResultRow(
-                label = "دفعت مقابل الإعفاء",
+                label = "Ø¯ÙØ¹Øª Ù…Ù‚Ø§Ø¨Ù„ Ø§Ù„Ø¥Ø¹ÙØ§Ø¡",
                 value = exemptionCost.jod(),
             )
 
             HorizontalDivider()
 
             ResultRow(
-                label      = "ربحك الصافي",
+                label      = "Ø±Ø¨Ø­Ùƒ Ø§Ù„ØµØ§ÙÙŠ",
                 value      = result.netProfit.jod(),
                 valueColor = profitColor,
                 bold       = true,
@@ -255,11 +255,11 @@ private fun ResultsCard(result: CalcResult, exemptionCost: Double) {
 
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 ResultRow(
-                    label = "أدنى سعر سوق للربح",
+                    label = "Ø£Ø¯Ù†Ù‰ Ø³Ø¹Ø± Ø³ÙˆÙ‚ Ù„Ù„Ø±Ø¨Ø­",
                     value = result.breakEvenMarketPrice.jod(),
                 )
                 Text(
-                    text  = "أي سيارة أغلى من هذا السعر = صفقة مربحة",
+                    text  = "Ø£ÙŠ Ø³ÙŠØ§Ø±Ø© Ø£ØºÙ„Ù‰ Ù…Ù† Ù‡Ø°Ø§ Ø§Ù„Ø³Ø¹Ø± = ØµÙÙ‚Ø© Ù…Ø±Ø¨Ø­Ø©",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.fillMaxWidth(),
@@ -270,28 +270,28 @@ private fun ResultsCard(result: CalcResult, exemptionCost: Double) {
     }
 }
 
-// ── Verdict card ──────────────────────────────────────────────────────────────
+// â”€â”€ Verdict card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun VerdictCard(result: CalcResult) {
     val (bg, icon, title, subtitle) = when {
         result.netProfit > 1000.0 -> Quad(
             bg       = GreenBg,
-            icon     = "✅",
-            title    = "الصفقة مربحة",
-            subtitle = "تربح ${result.netProfit.jod()} من هذه الصفقة",
+            icon     = "âœ…",
+            title    = "Ø§Ù„ØµÙÙ‚Ø© Ù…Ø±Ø¨Ø­Ø©",
+            subtitle = "ØªØ±Ø¨Ø­ ${result.netProfit.jod()} Ù…Ù† Ù‡Ø°Ù‡ Ø§Ù„ØµÙÙ‚Ø©",
         )
         result.netProfit >= 0.0   -> Quad(
             bg       = AmberBg,
-            icon     = "⚠️",
-            title    = "الصفقة على الحافة",
-            subtitle = "الربح ضعيف — احسب تكاليف إضافية (ترخيص، نقل...)",
+            icon     = "âš ï¸",
+            title    = "Ø§Ù„ØµÙÙ‚Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø§ÙØ©",
+            subtitle = "Ø§Ù„Ø±Ø¨Ø­ Ø¶Ø¹ÙŠÙ â€” Ø§Ø­Ø³Ø¨ ØªÙƒØ§Ù„ÙŠÙ Ø¥Ø¶Ø§ÙÙŠØ© (ØªØ±Ø®ÙŠØµØŒ Ù†Ù‚Ù„...)",
         )
         else                      -> Quad(
             bg       = RedBg,
-            icon     = "❌",
-            title    = "الصفقة خاسرة",
-            subtitle = "تحتاج سيارة بسعر سوق لا يقل عن ${result.breakEvenMarketPrice.jod()}",
+            icon     = "âŒ",
+            title    = "Ø§Ù„ØµÙÙ‚Ø© Ø®Ø§Ø³Ø±Ø©",
+            subtitle = "ØªØ­ØªØ§Ø¬ Ø³ÙŠØ§Ø±Ø© Ø¨Ø³Ø¹Ø± Ø³ÙˆÙ‚ Ù„Ø§ ÙŠÙ‚Ù„ Ø¹Ù† ${result.breakEvenMarketPrice.jod()}",
         )
     }
 
@@ -323,7 +323,7 @@ private fun VerdictCard(result: CalcResult) {
     }
 }
 
-// ── Example card ──────────────────────────────────────────────────────────────
+// â”€â”€ Example card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun ExampleCard(
@@ -333,9 +333,9 @@ private fun ExampleCard(
     result:        CalcResult,
 ) {
     val verdict = when {
-        result.netProfit > 1000.0 -> "صفقة مربحة ✅"
-        result.netProfit >= 0.0   -> "على الحافة ⚠️"
-        else                      -> "صفقة خاسرة ❌"
+        result.netProfit > 1000.0 -> "ØµÙÙ‚Ø© Ù…Ø±Ø¨Ø­Ø© âœ…"
+        result.netProfit >= 0.0   -> "Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø§ÙØ© âš ï¸"
+        else                      -> "ØµÙÙ‚Ø© Ø®Ø§Ø³Ø±Ø© âŒ"
     }
 
     Card(
@@ -349,15 +349,15 @@ private fun ExampleCard(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text  = "مثال محسوب",
+                text  = "Ù…Ø«Ø§Ù„ Ù…Ø­Ø³ÙˆØ¨",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.outline,
             )
             Spacer(Modifier.height(2.dp))
-            ExampleLine("${vehicleType.emoji} ${vehicleType.label} — سعر السوق", marketPrice.jod())
-            ExampleLine("سعر الوكيل الأساسي (قبل الضريبة)", result.basePrice.jod())
-            ExampleLine("الضريبة الموفّرة", result.taxSaved.jod())
-            ExampleLine("دفعت للضابط", exemptionCost.jod())
+            ExampleLine("${vehicleType.emoji} ${vehicleType.label} â€” Ø³Ø¹Ø± Ø§Ù„Ø³ÙˆÙ‚", marketPrice.jod())
+            ExampleLine("Ø³Ø¹Ø± Ø§Ù„ÙˆÙƒÙŠÙ„ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ (Ù‚Ø¨Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©)", result.basePrice.jod())
+            ExampleLine("Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù…ÙˆÙÙ‘Ø±Ø©", result.taxSaved.jod())
+            ExampleLine("Ø¯ÙØ¹Øª Ù„Ù„Ø¶Ø§Ø¨Ø·", exemptionCost.jod())
             Spacer(Modifier.height(4.dp))
             Row(
                 modifier              = Modifier.fillMaxWidth(),
@@ -365,7 +365,7 @@ private fun ExampleCard(
                 verticalAlignment     = Alignment.CenterVertically,
             ) {
                 Text(
-                    text  = "ربحك: ${result.netProfit.jod()}",
+                    text  = "Ø±Ø¨Ø­Ùƒ: ${result.netProfit.jod()}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -379,7 +379,7 @@ private fun ExampleCard(
     }
 }
 
-// ── Help bottom sheet ─────────────────────────────────────────────────────────
+// â”€â”€ Help bottom sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -394,62 +394,62 @@ private fun HelpBottomSheet(onDismiss: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Text(
-                text      = "كيف تعمل حاسبة الإعفاء؟",
+                text      = "ÙƒÙŠÙ ØªØ¹Ù…Ù„ Ø­Ø§Ø³Ø¨Ø© Ø§Ù„Ø¥Ø¹ÙØ§Ø¡ØŸ",
                 style     = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
             )
 
             HelpSection(
-                title = "ما هو الإعفاء؟",
-                body  = "إعفاء الضابط هو حق قانوني يتيح شراء سيارة بدون ضريبة المبيعات " +
-                        "(51% للبنزين، 39% للهايبرد، 27% للكهربائي).\n\n" +
-                        "الوسيط يشتري هذا الحق من الضابط بسعر السوق، ويستخدمه على " +
-                        "سيارة يختارها. ربحه هو الفرق بين الضريبة الموفّرة وما دفعه.",
+                title = "Ù…Ø§ Ù‡Ùˆ Ø§Ù„Ø¥Ø¹ÙØ§Ø¡ØŸ",
+                body  = "Ø¥Ø¹ÙØ§Ø¡ Ø§Ù„Ø¶Ø§Ø¨Ø· Ù‡Ùˆ Ø­Ù‚ Ù‚Ø§Ù†ÙˆÙ†ÙŠ ÙŠØªÙŠØ­ Ø´Ø±Ø§Ø¡ Ø³ÙŠØ§Ø±Ø© Ø¨Ø¯ÙˆÙ† Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª " +
+                        "(51% Ù„Ù„Ø¨Ù†Ø²ÙŠÙ†ØŒ 39% Ù„Ù„Ù‡Ø§ÙŠØ¨Ø±Ø¯ØŒ 27% Ù„Ù„ÙƒÙ‡Ø±Ø¨Ø§Ø¦ÙŠ).\n\n" +
+                        "Ø§Ù„ÙˆØ³ÙŠØ· ÙŠØ´ØªØ±ÙŠ Ù‡Ø°Ø§ Ø§Ù„Ø­Ù‚ Ù…Ù† Ø§Ù„Ø¶Ø§Ø¨Ø· Ø¨Ø³Ø¹Ø± Ø§Ù„Ø³ÙˆÙ‚ØŒ ÙˆÙŠØ³ØªØ®Ø¯Ù…Ù‡ Ø¹Ù„Ù‰ " +
+                        "Ø³ÙŠØ§Ø±Ø© ÙŠØ®ØªØ§Ø±Ù‡Ø§. Ø±Ø¨Ø­Ù‡ Ù‡Ùˆ Ø§Ù„ÙØ±Ù‚ Ø¨ÙŠÙ† Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù…ÙˆÙÙ‘Ø±Ø© ÙˆÙ…Ø§ Ø¯ÙØ¹Ù‡.",
             )
 
-            HelpSection(title = "مثال توضيحي") {
+            HelpSection(title = "Ù…Ø«Ø§Ù„ ØªÙˆØ¶ÙŠØ­ÙŠ") {
                 HelpExampleBlock(
                     lines = listOf(
-                        "سيارة بنزين — سعر السوق: 35,000 د.أ",
-                        "الضريبة الموفّرة (51%): 11,722 د.أ",
-                        "دفعت للضابط: 12,000 د.أ",
-                        "الربح: 278- ❌ خسارة بسيطة",
-                        "← جرّب سيارة أغلى!",
+                        "Ø³ÙŠØ§Ø±Ø© Ø¨Ù†Ø²ÙŠÙ† â€” Ø³Ø¹Ø± Ø§Ù„Ø³ÙˆÙ‚: 35,000 Ø¯.Ø£",
+                        "Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù…ÙˆÙÙ‘Ø±Ø© (51%): 11,722 Ø¯.Ø£",
+                        "Ø¯ÙØ¹Øª Ù„Ù„Ø¶Ø§Ø¨Ø·: 12,000 Ø¯.Ø£",
+                        "Ø§Ù„Ø±Ø¨Ø­: 278- âŒ Ø®Ø³Ø§Ø±Ø© Ø¨Ø³ÙŠØ·Ø©",
+                        "â† Ø¬Ø±Ù‘Ø¨ Ø³ÙŠØ§Ø±Ø© Ø£ØºÙ„Ù‰!",
                     ),
                 )
                 Spacer(Modifier.height(8.dp))
                 HelpExampleBlock(
                     lines = listOf(
-                        "هايبرد — سعر السوق 40,000: الضريبة 11,151 → ربح 849- ❌",
-                        "هايبرد — سعر السوق 45,000: الضريبة 12,544 → ربح 544 ⚠️ على الحافة",
-                        "هايبرد — سعر السوق 55,000: الضريبة 15,331 → ربح 3,331 ✅✅ مربحة",
+                        "Ù‡Ø§ÙŠØ¨Ø±Ø¯ â€” Ø³Ø¹Ø± Ø§Ù„Ø³ÙˆÙ‚ 40,000: Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© 11,151 â†’ Ø±Ø¨Ø­ 849- âŒ",
+                        "Ù‡Ø§ÙŠØ¨Ø±Ø¯ â€” Ø³Ø¹Ø± Ø§Ù„Ø³ÙˆÙ‚ 45,000: Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© 12,544 â†’ Ø±Ø¨Ø­ 544 âš ï¸ Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø§ÙØ©",
+                        "Ù‡Ø§ÙŠØ¨Ø±Ø¯ â€” Ø³Ø¹Ø± Ø§Ù„Ø³ÙˆÙ‚ 55,000: Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© 15,331 â†’ Ø±Ø¨Ø­ 3,331 âœ…âœ… Ù…Ø±Ø¨Ø­Ø©",
                     ),
                 )
             }
 
             HelpSection(
-                title = "لماذا يتغير سعر الإعفاء؟",
-                body  = "سعر الإعفاء يحدده السوق مثل أي سلعة:\n" +
-                        "• عندما يرتفع الطلب على السيارات ← يرتفع سعر الإعفاء\n" +
-                        "• عندما يتغير القانون ← يتغير سعر الإعفاء\n\n" +
-                        "في 2024 كان السعر ~16,000 د.أ\n" +
-                        "في 2025 انخفض لـ ~12,000 د.أ بسبب قرار تخفيض الضرائب\n\n" +
-                        "تحقق دائماً من السعر الحالي قبل أي صفقة.",
+                title = "Ù„Ù…Ø§Ø°Ø§ ÙŠØªØºÙŠØ± Ø³Ø¹Ø± Ø§Ù„Ø¥Ø¹ÙØ§Ø¡ØŸ",
+                body  = "Ø³Ø¹Ø± Ø§Ù„Ø¥Ø¹ÙØ§Ø¡ ÙŠØ­Ø¯Ø¯Ù‡ Ø§Ù„Ø³ÙˆÙ‚ Ù…Ø«Ù„ Ø£ÙŠ Ø³Ù„Ø¹Ø©:\n" +
+                        "â€¢ Ø¹Ù†Ø¯Ù…Ø§ ÙŠØ±ØªÙØ¹ Ø§Ù„Ø·Ù„Ø¨ Ø¹Ù„Ù‰ Ø§Ù„Ø³ÙŠØ§Ø±Ø§Øª â† ÙŠØ±ØªÙØ¹ Ø³Ø¹Ø± Ø§Ù„Ø¥Ø¹ÙØ§Ø¡\n" +
+                        "â€¢ Ø¹Ù†Ø¯Ù…Ø§ ÙŠØªØºÙŠØ± Ø§Ù„Ù‚Ø§Ù†ÙˆÙ† â† ÙŠØªØºÙŠØ± Ø³Ø¹Ø± Ø§Ù„Ø¥Ø¹ÙØ§Ø¡\n\n" +
+                        "ÙÙŠ 2024 ÙƒØ§Ù† Ø§Ù„Ø³Ø¹Ø± ~16,000 Ø¯.Ø£\n" +
+                        "ÙÙŠ 2025 Ø§Ù†Ø®ÙØ¶ Ù„Ù€ ~12,000 Ø¯.Ø£ Ø¨Ø³Ø¨Ø¨ Ù‚Ø±Ø§Ø± ØªØ®ÙÙŠØ¶ Ø§Ù„Ø¶Ø±Ø§Ø¦Ø¨\n\n" +
+                        "ØªØ­Ù‚Ù‚ Ø¯Ø§Ø¦Ù…Ø§Ù‹ Ù…Ù† Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ø­Ø§Ù„ÙŠ Ù‚Ø¨Ù„ Ø£ÙŠ ØµÙÙ‚Ø©.",
             )
 
-            HelpSection(title = "تنبيهات مهمة") {
+            HelpSection(title = "ØªÙ†Ø¨ÙŠÙ‡Ø§Øª Ù…Ù‡Ù…Ø©") {
                 val warnings = listOf(
-                    "نسب الضريبة حسب قرار 28 يونيو 2025 — قد تتغير بأي وقت",
-                    "الحاسبة لا تشمل: رسوم الترخيص، نقل الملكية، عمولة الوسيط",
-                    "سعر الإعفاء المعروض افتراضي — تحقق من السعر الفعلي بالسوق",
-                    "هذا التطبيق منصة معلومات فقط وليس مسؤولاً عن أي صفقة",
+                    "Ù†Ø³Ø¨ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø­Ø³Ø¨ Ù‚Ø±Ø§Ø± 28 ÙŠÙˆÙ†ÙŠÙˆ 2025 â€” Ù‚Ø¯ ØªØªØºÙŠØ± Ø¨Ø£ÙŠ ÙˆÙ‚Øª",
+                    "Ø§Ù„Ø­Ø§Ø³Ø¨Ø© Ù„Ø§ ØªØ´Ù…Ù„: Ø±Ø³ÙˆÙ… Ø§Ù„ØªØ±Ø®ÙŠØµØŒ Ù†Ù‚Ù„ Ø§Ù„Ù…Ù„ÙƒÙŠØ©ØŒ Ø¹Ù…ÙˆÙ„Ø© Ø§Ù„ÙˆØ³ÙŠØ·",
+                    "Ø³Ø¹Ø± Ø§Ù„Ø¥Ø¹ÙØ§Ø¡ Ø§Ù„Ù…Ø¹Ø±ÙˆØ¶ Ø§ÙØªØ±Ø§Ø¶ÙŠ â€” ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ø³Ø¹Ø± Ø§Ù„ÙØ¹Ù„ÙŠ Ø¨Ø§Ù„Ø³ÙˆÙ‚",
+                    "Ù‡Ø°Ø§ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ù…Ù†ØµØ© Ù…Ø¹Ù„ÙˆÙ…Ø§Øª ÙÙ‚Ø· ÙˆÙ„ÙŠØ³ Ù…Ø³Ø¤ÙˆÙ„Ø§Ù‹ Ø¹Ù† Ø£ÙŠ ØµÙÙ‚Ø©",
                 )
                 warnings.forEach { warning ->
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text("⚠️")
+                        Text("âš ï¸")
                         Text(
                             text  = warning,
                             style = MaterialTheme.typography.bodyMedium,
@@ -462,7 +462,7 @@ private fun HelpBottomSheet(onDismiss: () -> Unit) {
                 onClick  = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("فهمت، لنبدأ الحساب")
+                Text("ÙÙ‡Ù…ØªØŒ Ù„Ù†Ø¨Ø¯Ø£ Ø§Ù„Ø­Ø³Ø§Ø¨")
             }
 
             Spacer(Modifier.height(8.dp))
@@ -470,7 +470,7 @@ private fun HelpBottomSheet(onDismiss: () -> Unit) {
     }
 }
 
-// ── Small shared composables ──────────────────────────────────────────────────
+// â”€â”€ Small shared composables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @Composable
 private fun ResultRow(
@@ -564,6 +564,7 @@ private fun HelpExampleBlock(lines: List<String>) {
     }
 }
 
-// ── Utility ───────────────────────────────────────────────────────────────────
+// â”€â”€ Utility â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 private data class Quad<A, B, C, D>(val bg: A, val icon: B, val title: C, val subtitle: D)
+

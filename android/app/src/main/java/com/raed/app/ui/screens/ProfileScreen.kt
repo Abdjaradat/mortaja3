@@ -1,4 +1,4 @@
-package com.raed.app.ui.screens
+﻿package com.raed.app.ui.screens
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -9,7 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import com.raed.app.ui.components.UnityBannerCard
+import com.raed.app.ui.components.UnityBannerAd
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -138,8 +138,8 @@ class ProfileViewModel @Inject constructor(
 }
 
 private val JORDANIAN_GOVERNORATES = listOf(
-    "عمّان", "إربد", "الزرقاء", "البلقاء", "مأدبا", "الكرك",
-    "الطفيلة", "معان", "العقبة", "جرش", "عجلون", "المفرق",
+    "Ø¹Ù…Ù‘Ø§Ù†", "Ø¥Ø±Ø¨Ø¯", "Ø§Ù„Ø²Ø±Ù‚Ø§Ø¡", "Ø§Ù„Ø¨Ù„Ù‚Ø§Ø¡", "Ù…Ø£Ø¯Ø¨Ø§", "Ø§Ù„ÙƒØ±Ùƒ",
+    "Ø§Ù„Ø·ÙÙŠÙ„Ø©", "Ù…Ø¹Ø§Ù†", "Ø§Ù„Ø¹Ù‚Ø¨Ø©", "Ø¬Ø±Ø´", "Ø¹Ø¬Ù„ÙˆÙ†", "Ø§Ù„Ù…ÙØ±Ù‚",
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -174,9 +174,9 @@ fun ProfileContent(
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
             title = { Text(stringResource(R.string.logout)) },
-            text = { Text("هل تريد تسجيل الخروج؟") },
+            text = { Text("Ù‡Ù„ ØªØ±ÙŠØ¯ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬ØŸ") },
             confirmButton = {
-                TextButton(onClick = { viewModel.logout() }) { Text("نعم") }
+                TextButton(onClick = { viewModel.logout() }) { Text("Ù†Ø¹Ù…") }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) { Text(stringResource(R.string.cancel)) }
@@ -227,7 +227,7 @@ fun ProfileContent(
                         } else if (isUploadingPhoto) {
                             CircularProgressIndicator(modifier = Modifier.size(32.dp), strokeWidth = 3.dp)
                         } else {
-                            Text("👤", fontSize = 36.sp)
+                            Text("ðŸ‘¤", fontSize = 36.sp)
                         }
                     }
                     if (!isUploadingPhoto) {
@@ -239,7 +239,7 @@ fun ProfileContent(
                                 .align(Alignment.BottomEnd),
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                Text("✎", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary)
+                                Text("âœŽ", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimary)
                             }
                         }
                     }
@@ -248,7 +248,7 @@ fun ProfileContent(
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    label = { Text("الاسم الكامل") },
+                    label = { Text("Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     enabled = !isSaving,
@@ -263,7 +263,7 @@ fun ProfileContent(
                         value = governorate,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("المحافظة") },
+                        label = { Text("Ø§Ù„Ù…Ø­Ø§ÙØ¸Ø©") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded) },
                         modifier = Modifier.fillMaxWidth().menuAnchor(),
                         enabled = !isSaving,
@@ -284,10 +284,10 @@ fun ProfileContent(
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it.filter { c -> c.isDigit() } },
-                    label = { Text("رقم التواصل") },
+                    label = { Text("Ø±Ù‚Ù… Ø§Ù„ØªÙˆØ§ØµÙ„") },
                     placeholder = { Text("07X XXX XXXX") },
                     prefix = { Text("+962 ") },
-                    supportingText = { Text("يُستخدم عند الكشف عن رقمك في الإعلانات", style = MaterialTheme.typography.labelSmall) },
+                    supportingText = { Text("ÙŠÙØ³ØªØ®Ø¯Ù… Ø¹Ù†Ø¯ Ø§Ù„ÙƒØ´Ù Ø¹Ù† Ø±Ù‚Ù…Ùƒ ÙÙŠ Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†Ø§Øª", style = MaterialTheme.typography.labelSmall) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -325,7 +325,7 @@ fun ProfileContent(
                 }
 
                 Spacer(Modifier.height(8.dp))
-                UnityBannerCard()
+                UnityBannerAd()
 
                 if (BuildConfig.DEBUG) {
                     var fcmToken by remember { mutableStateOf("Loading...") }
@@ -352,3 +352,4 @@ fun ProfileContent(
         }
     }
 }
+

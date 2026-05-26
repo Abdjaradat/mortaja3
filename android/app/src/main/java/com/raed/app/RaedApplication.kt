@@ -15,7 +15,7 @@ class RaedApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         MobileAds.initialize(this)
-        UnityAdsHelper.initialize(this, testMode = BuildConfig.DEBUG)
+        UnityAdsHelper.initialize(this, BuildConfig.DEBUG)
         createNotificationChannels()
     }
 

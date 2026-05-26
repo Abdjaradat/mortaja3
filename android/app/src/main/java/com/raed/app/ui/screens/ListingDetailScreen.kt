@@ -1,4 +1,4 @@
-package com.raed.app.ui.screens
+﻿package com.raed.app.ui.screens
 
 import android.app.Activity
 import androidx.compose.foundation.background
@@ -36,7 +36,7 @@ import com.raed.app.data.api.models.EarnShareRequest
 import com.raed.app.ui.components.TokenGateBottomSheet
 import com.raed.app.ui.components.AdEarnCard
 import com.raed.app.ui.components.ShareListingBottomSheet
-import com.raed.app.ui.components.UnityBannerCard
+import com.raed.app.ui.components.UnityBannerAd
 import com.raed.app.ui.screens.token.loadAndShowRewardedAd
 import com.raed.app.utils.toTimeAgo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -92,9 +92,9 @@ class ListingDetailViewModel @Inject constructor(
             runCatching { api.getListingById(listingId) }
                 .onSuccess { r ->
                     if (r.isSuccessful) listing = r.body()
-                    else loadError = "لم يُعثر على الإعلان"
+                    else loadError = "Ù„Ù… ÙŠÙØ¹Ø«Ø± Ø¹Ù„Ù‰ Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†"
                 }
-                .onFailure { loadError = "تحقق من اتصالك بالإنترنت" }
+                .onFailure { loadError = "ØªØ­Ù‚Ù‚ Ù…Ù† Ø§ØªØµØ§Ù„Ùƒ Ø¨Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª" }
             isLoading = false
         }
     }
@@ -124,12 +124,12 @@ class ListingDetailViewModel @Inject constructor(
                         tokenGateRequired = 20
                         showTokenGate = true
                     } else if (r.code() == 404) {
-                        snackbarMessage = "لا يوجد رقم هاتف لهذا الإعلان"
+                        snackbarMessage = "Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø±Ù‚Ù… Ù‡Ø§ØªÙ Ù„Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†"
                     } else {
-                        snackbarMessage = "فشل الكشف عن رقم الهاتف"
+                        snackbarMessage = "ÙØ´Ù„ Ø§Ù„ÙƒØ´Ù Ø¹Ù† Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ"
                     }
                 }
-                .onFailure { snackbarMessage = "خطأ في الاتصال" }
+                .onFailure { snackbarMessage = "Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø§ØªØµØ§Ù„" }
             isSpending = false
         }
     }
@@ -150,13 +150,13 @@ class ListingDetailViewModel @Inject constructor(
                     if (r.isSuccessful) {
                         tokenBalance -= 10
                         val conv = r.body()!!
-                        val name = listing?.officer?.fullName ?: "البائع"
+                        val name = listing?.officer?.fullName ?: "Ø§Ù„Ø¨Ø§Ø¦Ø¹"
                         startConversationResult = conv.id to name
                     } else {
-                        snackbarMessage = "فشل بدء المحادثة"
+                        snackbarMessage = "ÙØ´Ù„ Ø¨Ø¯Ø¡ Ø§Ù„Ù…Ø­Ø§Ø¯Ø«Ø©"
                     }
                 }
-                .onFailure { snackbarMessage = "خطأ في الاتصال" }
+                .onFailure { snackbarMessage = "Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø§ØªØµØ§Ù„" }
             isSpending = false
         }
     }
@@ -185,7 +185,7 @@ class ListingDetailViewModel @Inject constructor(
                     if (r.isSuccessful) {
                         val earned = r.body()?.tokensEarned ?: 10
                         tokenBalance += earned
-                        snackbarMessage = "ربحت $earned توكن 🎉"
+                        snackbarMessage = "Ø±Ø¨Ø­Øª $earned ØªÙˆÙƒÙ† ðŸŽ‰"
                     }
                 }
         }
@@ -219,7 +219,7 @@ fun ListingDetailScreen(
     }
 
     val listing = viewModel.listing
-    val title = listing?.makeModel ?: if (viewModel.isLoading) "جار التحميل…" else "الإعلان"
+    val title = listing?.makeModel ?: if (viewModel.isLoading) "Ø¬Ø§Ø± Ø§Ù„ØªØ­Ù…ÙŠÙ„â€¦" else "Ø§Ù„Ø¥Ø¹Ù„Ø§Ù†"
 
     Scaffold(
         topBar = {
@@ -227,13 +227,13 @@ fun ListingDetailScreen(
                 title = { Text(title, maxLines = 1) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "رجوع")
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Ø±Ø¬ÙˆØ¹")
                     }
                 },
                 actions = {
                     if (listing != null) {
                         IconButton(onClick = { viewModel.openShareSheet() }) {
-                            Icon(Icons.Outlined.Share, contentDescription = "مشاركة")
+                            Icon(Icons.Outlined.Share, contentDescription = "Ù…Ø´Ø§Ø±ÙƒØ©")
                         }
                     }
                 },
@@ -242,7 +242,7 @@ fun ListingDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             Column {
-                UnityBannerCard()
+                UnityBannerAd()
                 if (listing != null) {
                     if (listing.isExemptionRight) {
                         ExemptionBottomBar(onMessage = { viewModel.onMessageClick() })
@@ -266,9 +266,9 @@ fun ListingDetailScreen(
             viewModel.loadError != null -> {
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("⚠️", fontSize = 40.sp)
+                        Text("âš ï¸", fontSize = 40.sp)
                         Text(viewModel.loadError!!, color = MaterialTheme.colorScheme.error)
-                        OutlinedButton(onClick = { viewModel.load() }) { Text("إعادة المحاولة") }
+                        OutlinedButton(onClick = { viewModel.load() }) { Text("Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©") }
                     }
                 }
             }
@@ -310,7 +310,7 @@ fun ListingDetailScreen(
     if (viewModel.showShareSheet) {
         val l = viewModel.listing
         ShareListingBottomSheet(
-            listingTitle = l?.makeModel ?: "إعلان",
+            listingTitle = l?.makeModel ?: "Ø¥Ø¹Ù„Ø§Ù†",
             listingPrice = l?.expectedPrice,
             onShare = { platform -> viewModel.earnShare(platform) },
             onDismiss = { viewModel.dismissShareSheet() },
@@ -320,12 +320,12 @@ fun ListingDetailScreen(
     viewModel.revealedPhone?.let { phone ->
         AlertDialog(
             onDismissRequest = { viewModel.dismissPhone() },
-            title = { Text("رقم الهاتف") },
+            title = { Text("Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ") },
             text = {
                 Text(text = phone, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
             },
             confirmButton = {
-                TextButton(onClick = { viewModel.dismissPhone() }) { Text("حسناً") }
+                TextButton(onClick = { viewModel.dismissPhone() }) { Text("Ø­Ø³Ù†Ø§Ù‹") }
             },
         )
     }
@@ -358,7 +358,7 @@ private fun CarDetailContent(listing: ListingDto, onWatchAd: () -> Unit, modifie
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
             ) {
-                listing.mileageKm?.let { DetailChip("%,d كم".format(it)) }
+                listing.mileageKm?.let { DetailChip("%,d ÙƒÙ…".format(it)) }
                 listing.fuelTypeLabel.takeIf { it.isNotEmpty() }?.let { DetailChip(it) }
                 listing.transmissionLabel.takeIf { it.isNotEmpty() }?.let { DetailChip(it) }
                 listing.color?.let { DetailChip(it) }
@@ -367,7 +367,7 @@ private fun CarDetailContent(listing: ListingDto, onWatchAd: () -> Unit, modifie
             if (!listing.notes.isNullOrBlank()) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("الوصف", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        Text("Ø§Ù„ÙˆØµÙ", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                         HorizontalDivider()
                         Text(listing.notes, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -393,17 +393,17 @@ private fun CarDetailContent(listing: ListingDto, onWatchAd: () -> Unit, modifie
                                 contentScale = ContentScale.Crop,
                             )
                         } else {
-                            Text("👤", fontSize = 20.sp)
+                            Text("ðŸ‘¤", fontSize = 20.sp)
                         }
                     }
                     Column {
                         Text(
-                            listing.officer?.fullName ?: "البائع",
+                            listing.officer?.fullName ?: "Ø§Ù„Ø¨Ø§Ø¦Ø¹",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
-                            "📍 ${listing.governorate} • ${listing.createdAt.toTimeAgo()}",
+                            "ðŸ“ ${listing.governorate} â€¢ ${listing.createdAt.toTimeAgo()}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -430,12 +430,12 @@ private fun ExemptionDetailContent(
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("🎖", fontSize = 36.sp)
-                Text("إعفاء ضابط", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("ðŸŽ–", fontSize = 36.sp)
+                Text("Ø¥Ø¹ÙØ§Ø¡ Ø¶Ø§Ø¨Ø·", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
                 if (listing.isVerified) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         Icon(Icons.Outlined.Verified, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                        Text("موثّق", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                        Text("Ù…ÙˆØ«Ù‘Ù‚", style = MaterialTheme.typography.labelLarge, color = Color.White)
                     }
                 }
             }
@@ -444,17 +444,17 @@ private fun ExemptionDetailContent(
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = ExemptionBg)) {
                 Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    ExemptionDetailRow("يبحث عن", listing.makeModel)
-                    listing.expectedPrice?.let { ExemptionDetailRow("السعر", it.toJod()) }
-                    ExemptionDetailRow("المحافظة", "📍 ${listing.governorate}")
-                    ExemptionDetailRow("نُشر", listing.createdAt.toTimeAgo())
+                    ExemptionDetailRow("ÙŠØ¨Ø­Ø« Ø¹Ù†", listing.makeModel)
+                    listing.expectedPrice?.let { ExemptionDetailRow("Ø§Ù„Ø³Ø¹Ø±", it.toJod()) }
+                    ExemptionDetailRow("Ø§Ù„Ù…Ø­Ø§ÙØ¸Ø©", "ðŸ“ ${listing.governorate}")
+                    ExemptionDetailRow("Ù†ÙØ´Ø±", listing.createdAt.toTimeAgo())
                 }
             }
 
             if (!listing.notes.isNullOrBlank()) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("ملاحظات", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        Text("Ù…Ù„Ø§Ø­Ø¸Ø§Øª", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                         HorizontalDivider()
                         Text(listing.notes, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -467,7 +467,7 @@ private fun ExemptionDetailContent(
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Gold),
                 border = androidx.compose.foundation.BorderStroke(1.dp, Gold),
             ) {
-                Text("احسب الربح من هذا الإعلان 🧮", fontWeight = FontWeight.SemiBold)
+                Text("Ø§Ø­Ø³Ø¨ Ø§Ù„Ø±Ø¨Ø­ Ù…Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¹Ù„Ø§Ù† ðŸ§®", fontWeight = FontWeight.SemiBold)
             }
 
             AdEarnCard(onAdWatched = onWatchAd)
@@ -484,7 +484,7 @@ private fun CarBottomBar(isSpending: Boolean, onMessage: () -> Unit, onReveal: (
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             OutlinedButton(onClick = onMessage, modifier = Modifier.weight(1f)) {
-                Text("💬 راسل — 10🪙", style = MaterialTheme.typography.labelLarge)
+                Text("ðŸ’¬ Ø±Ø§Ø³Ù„ â€” 10ðŸª™", style = MaterialTheme.typography.labelLarge)
             }
             Button(
                 onClick = onReveal,
@@ -495,7 +495,7 @@ private fun CarBottomBar(isSpending: Boolean, onMessage: () -> Unit, onReveal: (
                 if (isSpending) {
                     CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
                 } else {
-                    Text("📞 اتصل — 20🪙", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                    Text("ðŸ“ž Ø§ØªØµÙ„ â€” 20ðŸª™", style = MaterialTheme.typography.labelLarge, color = Color.White)
                 }
             }
         }
@@ -507,7 +507,7 @@ private fun ExemptionBottomBar(onMessage: () -> Unit) {
     Surface(tonalElevation = 8.dp, shadowElevation = 8.dp) {
         Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp)) {
             Button(onClick = onMessage, modifier = Modifier.fillMaxWidth()) {
-                Text("💬 تواصل — 10🪙", style = MaterialTheme.typography.labelLarge)
+                Text("ðŸ’¬ ØªÙˆØ§ØµÙ„ â€” 10ðŸª™", style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -531,3 +531,4 @@ private fun ExemptionDetailRow(label: String, value: String) {
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
 }
+

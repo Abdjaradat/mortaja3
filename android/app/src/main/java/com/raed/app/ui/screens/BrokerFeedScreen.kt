@@ -1,4 +1,4 @@
-package com.raed.app.ui.screens
+﻿package com.raed.app.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.raed.app.ui.components.UnityBannerCard
+import com.raed.app.ui.components.UnityBannerAd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
@@ -39,7 +39,7 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 
 private val Gold = Color(0xFFC9A961)
-private fun Int.toJod() = "%,d د.أ".format(this)
+private fun Int.toJod() = "%,d Ø¯.Ø£".format(this)
 
 @HiltViewModel
 class BrokerFeedViewModel @Inject constructor(
@@ -68,10 +68,10 @@ class BrokerFeedViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     requests = response.body() ?: emptyList()
                 } else {
-                    error = "خطأ في تحميل الطلبات"
+                    error = "Ø®Ø·Ø£ ÙÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨Ø§Øª"
                 }
             } catch (e: Exception) {
-                error = "تعذّر الاتصال بالخادم"
+                error = "ØªØ¹Ø°Ù‘Ø± Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø®Ø§Ø¯Ù…"
             } finally {
                 isLoading = false
                 isRefreshing = false
@@ -103,7 +103,7 @@ fun BrokerFeedContent(
         modifier = modifier,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // ── Collapsible info card ───────────────────────────────────
+            // â”€â”€ Collapsible info card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -120,7 +120,7 @@ fun BrokerFeedContent(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            "كيف يعمل المزاد؟ 💡",
+                            "ÙƒÙŠÙ ÙŠØ¹Ù…Ù„ Ø§Ù„Ù…Ø²Ø§Ø¯ØŸ ðŸ’¡",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -133,11 +133,11 @@ fun BrokerFeedContent(
                     }
                     AnimatedVisibility(visible = infoExpanded) {
                         Text(
-                            text = "١. المشتري ينشر طلبه — نوع السيارة وميزانيته\n" +
-                                    "٢. أنت تقدّم عرضك بعدد التوكنز — كلما زاد عرضك زادت أولويتك\n" +
-                                    "٣. بعد 24 ساعة، يختار المشتري الوسيط المناسب\n" +
-                                    "٤. الفائز يحصل على رقم المشتري — الخاسرون يستردون توكنزهم\n\n" +
-                                    "⚠️ ملاحظة: التوكنز تُخصم عند تقديم العرض وتُعاد إذا لم تفز",
+                            text = "Ù¡. Ø§Ù„Ù…Ø´ØªØ±ÙŠ ÙŠÙ†Ø´Ø± Ø·Ù„Ø¨Ù‡ â€” Ù†ÙˆØ¹ Ø§Ù„Ø³ÙŠØ§Ø±Ø© ÙˆÙ…ÙŠØ²Ø§Ù†ÙŠØªÙ‡\n" +
+                                    "Ù¢. Ø£Ù†Øª ØªÙ‚Ø¯Ù‘Ù… Ø¹Ø±Ø¶Ùƒ Ø¨Ø¹Ø¯Ø¯ Ø§Ù„ØªÙˆÙƒÙ†Ø² â€” ÙƒÙ„Ù…Ø§ Ø²Ø§Ø¯ Ø¹Ø±Ø¶Ùƒ Ø²Ø§Ø¯Øª Ø£ÙˆÙ„ÙˆÙŠØªÙƒ\n" +
+                                    "Ù£. Ø¨Ø¹Ø¯ 24 Ø³Ø§Ø¹Ø©ØŒ ÙŠØ®ØªØ§Ø± Ø§Ù„Ù…Ø´ØªØ±ÙŠ Ø§Ù„ÙˆØ³ÙŠØ· Ø§Ù„Ù…Ù†Ø§Ø³Ø¨\n" +
+                                    "Ù¤. Ø§Ù„ÙØ§Ø¦Ø² ÙŠØ­ØµÙ„ Ø¹Ù„Ù‰ Ø±Ù‚Ù… Ø§Ù„Ù…Ø´ØªØ±ÙŠ â€” Ø§Ù„Ø®Ø§Ø³Ø±ÙˆÙ† ÙŠØ³ØªØ±Ø¯ÙˆÙ† ØªÙˆÙƒÙ†Ø²Ù‡Ù…\n\n" +
+                                    "âš ï¸ Ù…Ù„Ø§Ø­Ø¸Ø©: Ø§Ù„ØªÙˆÙƒÙ†Ø² ØªÙØ®ØµÙ… Ø¹Ù†Ø¯ ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ø¹Ø±Ø¶ ÙˆØªÙØ¹Ø§Ø¯ Ø¥Ø°Ø§ Ù„Ù… ØªÙØ²",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
@@ -146,7 +146,7 @@ fun BrokerFeedContent(
                 }
             }
 
-            // ── Content states ──────────────────────────────────────────
+            // â”€â”€ Content states â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             when {
                 viewModel.isLoading -> {
                     Box(
@@ -166,14 +166,14 @@ fun BrokerFeedContent(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text("⚠️", fontSize = 40.sp)
+                            Text("âš ï¸", fontSize = 40.sp)
                             Text(
                                 viewModel.error ?: "",
                                 style = MaterialTheme.typography.bodyMedium,
                                 textAlign = TextAlign.Center,
                             )
                             OutlinedButton(onClick = { viewModel.refresh() }) {
-                                Text("إعادة المحاولة")
+                                Text("Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©")
                             }
                         }
                     }
@@ -188,14 +188,14 @@ fun BrokerFeedContent(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            Text("🔨", fontSize = 48.sp)
+                            Text("ðŸ”¨", fontSize = 48.sp)
                             Text(
-                                "لا توجد طلبات حالياً",
+                                "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ø­Ø§Ù„ÙŠØ§Ù‹",
                                 style = MaterialTheme.typography.titleMedium,
                                 textAlign = TextAlign.Center,
                             )
                             Text(
-                                "سيظهر هنا طلبات المشترين بمجرد نشرها",
+                                "Ø³ÙŠØ¸Ù‡Ø± Ù‡Ù†Ø§ Ø·Ù„Ø¨Ø§Øª Ø§Ù„Ù…Ø´ØªØ±ÙŠÙ† Ø¨Ù…Ø¬Ø±Ø¯ Ù†Ø´Ø±Ù‡Ø§",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
@@ -221,9 +221,9 @@ fun BrokerFeedContent(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text("🔨", fontSize = 20.sp)
+                                    Text("ðŸ”¨", fontSize = 20.sp)
                                     Text(
-                                        "قدّم أعلى عرض بالتوكنز لتحصل على بيانات المشتري",
+                                        "Ù‚Ø¯Ù‘Ù… Ø£Ø¹Ù„Ù‰ Ø¹Ø±Ø¶ Ø¨Ø§Ù„ØªÙˆÙƒÙ†Ø² Ù„ØªØ­ØµÙ„ Ø¹Ù„Ù‰ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø´ØªØ±ÙŠ",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                                         modifier = Modifier.weight(1f),
@@ -242,7 +242,7 @@ fun BrokerFeedContent(
                     }
                 }
             }
-            UnityBannerCard()
+            UnityBannerAd()
         }
     }
 }
@@ -302,7 +302,7 @@ private fun RequestCard(
                         )
                     }
                     Text(
-                        "📍 ${request.governorate}",
+                        "ðŸ“ ${request.governorate}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -313,7 +313,7 @@ private fun RequestCard(
                         shape = MaterialTheme.shapes.small,
                     ) {
                         Text(
-                            "انتهى",
+                            "Ø§Ù†ØªÙ‡Ù‰",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
@@ -321,7 +321,7 @@ private fun RequestCard(
                     }
                 } else {
                     Text(
-                        "⏱ %02d:%02d:%02d".format(hours, minutes, seconds),
+                        "â± %02d:%02d:%02d".format(hours, minutes, seconds),
                         style = MaterialTheme.typography.labelMedium,
                         color = timeColor,
                         fontFamily = FontFamily.Monospace,
@@ -331,7 +331,7 @@ private fun RequestCard(
 
             // Budget
             Text(
-                "الميزانية: ${request.budgetMin.toJod()} — ${request.budgetMax.toJod()}",
+                "Ø§Ù„Ù…ÙŠØ²Ø§Ù†ÙŠØ©: ${request.budgetMin.toJod()} â€” ${request.budgetMax.toJod()}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -355,13 +355,13 @@ private fun RequestCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        "أعلى عرض: ${request.highestBid} 🪙",
+                        "Ø£Ø¹Ù„Ù‰ Ø¹Ø±Ø¶: ${request.highestBid} ðŸª™",
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         color = Gold,
                     )
                     Text(
-                        "${request.bidCount} وسيط قدّم عرضاً",
+                        "${request.bidCount} ÙˆØ³ÙŠØ· Ù‚Ø¯Ù‘Ù… Ø¹Ø±Ø¶Ø§Ù‹",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -376,7 +376,7 @@ private fun RequestCard(
                         shape = MaterialTheme.shapes.small,
                     ) {
                         Text(
-                            if (amIWinning) "أنت الأعلى 🏆" else "هناك عرض أعلى ⚡",
+                            if (amIWinning) "Ø£Ù†Øª Ø§Ù„Ø£Ø¹Ù„Ù‰ ðŸ†" else "Ù‡Ù†Ø§Ùƒ Ø¹Ø±Ø¶ Ø£Ø¹Ù„Ù‰ âš¡",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (amIWinning) Color(0xFF1B5E20) else Color(0xFFE65100),
@@ -391,7 +391,7 @@ private fun RequestCard(
                         colors = ButtonDefaults.buttonColors(containerColor = Gold),
                     ) {
                         Text(
-                            "قدّم عرضك",
+                            "Ù‚Ø¯Ù‘Ù… Ø¹Ø±Ø¶Ùƒ",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                         )
@@ -399,7 +399,7 @@ private fun RequestCard(
                 }
             }
 
-            // Already bid — show current bid + upgrade link
+            // Already bid â€” show current bid + upgrade link
             if (myBid != null && !isExpired) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -407,7 +407,7 @@ private fun RequestCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        "عرضك الحالي: ${myBid.tokens} 🪙",
+                        "Ø¹Ø±Ø¶Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ: ${myBid.tokens} ðŸª™",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -416,7 +416,7 @@ private fun RequestCard(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                     ) {
                         Text(
-                            "رفع العرض",
+                            "Ø±ÙØ¹ Ø§Ù„Ø¹Ø±Ø¶",
                             style = MaterialTheme.typography.labelSmall,
                             color = Gold,
                         )
@@ -426,3 +426,4 @@ private fun RequestCard(
         }
     }
 }
+
