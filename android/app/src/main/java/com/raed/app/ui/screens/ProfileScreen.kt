@@ -1,5 +1,8 @@
 package com.raed.app.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -27,6 +32,8 @@ import coil.compose.AsyncImage
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
+import com.raed.app.BuildConfig
 import com.raed.app.R
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -142,6 +149,7 @@ fun ProfileContent(
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
+    val context = LocalContext.current
     val profile by viewModel.profile.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
@@ -318,6 +326,27 @@ fun ProfileContent(
 
                 Spacer(Modifier.height(8.dp))
                 UnityBannerCard()
+
+                if (BuildConfig.DEBUG) {
+                    var fcmToken by remember { mutableStateOf("Loading...") }
+                    LaunchedEffect(Unit) {
+                        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                            fcmToken = token
+                        }
+                    }
+                    Text(
+                        text = fcmToken,
+                        fontSize = 8.sp,
+                        color = Color.Gray,
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .clickable {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("FCM Token", fcmToken))
+                            }
+                    )
+                }
+
                 Spacer(Modifier.height(16.dp))
             }
         }
