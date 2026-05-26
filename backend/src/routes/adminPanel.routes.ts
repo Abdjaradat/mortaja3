@@ -271,15 +271,16 @@ ${navbar("users")}
         <thead><tr class="text-gray-500 border-b text-right">
           <th class="pb-2 px-2">الاسم</th><th class="pb-2 px-2">الهاتف</th>
           <th class="pb-2 px-2">النوع</th><th class="pb-2 px-2">التوكنز</th>
-          <th class="pb-2 px-2">تاريخ التسجيل</th>
+          <th class="pb-2 px-2">تاريخ التسجيل</th><th class="pb-2 px-2">التفاصيل</th>
         </tr></thead>
         <tbody>\${d.users.map(u => \`
-          <tr style="border-bottom:1px solid #e5e7eb;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''" onclick="window.location.href='/admin/users/'+\${JSON.stringify(u.id)}">
+          <tr style="border-bottom:1px solid #e5e7eb;">
             <td class="py-2 px-2 font-medium">\${u.fullName || '—'}</td>
             <td class="py-2 px-2 font-mono text-xs">\${u.phoneNumber || '—'}</td>
             <td class="py-2 px-2"><span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">\${typeLabel[u.userType] || u.userType}</span></td>
             <td class="py-2 px-2 font-bold text-yellow-600">\${u.tokenBalance} 🪙</td>
             <td class="py-2 px-2 text-gray-400 text-xs">\${new Date(u.createdAt).toLocaleDateString('ar')}</td>
+            <td class="py-2 px-2"><a href="/admin/users/\${u.id}" style="color:#C9A961;text-decoration:none;font-weight:bold;">عرض التفاصيل ←</a></td>
           </tr>\`).join('')}
         </tbody>
       </table></div>\`;
